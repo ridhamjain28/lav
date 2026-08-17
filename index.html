@@ -47,6 +47,26 @@
   }
   @keyframes drift { from { background-position: 0 0; } to { background-position: 500px 300px; } }
 
+  /* floating hearts background layer */
+  .hearts-bg {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+  }
+  .bg-heart {
+    position: absolute;
+    color: var(--rose);
+    opacity: 0.12;
+    will-change: transform, opacity;
+    animation-name: floatHeart;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+  }
+  .bg-heart.gold { color: var(--gold); }
+  @keyframes floatHeart {
+    0% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-25px) rotate(8deg); }
+    100% { transform: translateY(0) rotate(0deg); }
+  }
+
   .app-wrap {
     position: relative;
     z-index: 1;
@@ -281,7 +301,7 @@
 
   @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
-  /* floating hearts */
+  /* floating hearts particles on completion */
   .heart-particle {
     position: fixed;
     pointer-events: none;
@@ -298,6 +318,7 @@
 <body>
 
 <div class="stars"></div>
+<div class="hearts-bg" id="heartsBg"></div>
 
 <!-- Hidden native numeric input that summons the native iOS / Android phone keypad -->
 <input id="nativeInput" type="tel" inputmode="numeric" pattern="[1-9]*" maxlength="1" autocomplete="off">
@@ -430,59 +451,6 @@ class SudokuEngine {
 }
 
 // =========================================================================
-// ROMANTIC AMBIENT AUDIO SYNTHESIZER (Fallback if song.mp3 isn't loaded)
-// =========================================================================
-class RomanticSynth {
-  constructor() {
-    this.ctx = null;
-    this.isPlaying = false;
-    this.timer = null;
-  }
-  start() {
-    if (this.isPlaying) return;
-    try {
-      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-      this.isPlaying = true;
-      this.playChords();
-    } catch(e) {}
-  }
-  stop() {
-    this.isPlaying = false;
-    if (this.timer) clearTimeout(this.timer);
-    if (this.ctx) this.ctx.close();
-  }
-  playNote(freq, time, dur) {
-    if (!this.ctx || !this.isPlaying) return;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(freq, time);
-    gain.gain.setValueAtTime(0.001, time);
-    gain.gain.exponentialRampToValueAtTime(0.06, time + 0.1);
-    gain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
-    osc.start(time);
-    osc.stop(time + dur);
-  }
-  playChords() {
-    if (!this.isPlaying || !this.ctx) return;
-    const chords = [
-      [261.63, 329.63, 392.00, 523.25], // C
-      [220.00, 261.63, 329.63, 440.00], // Am
-      [174.61, 220.00, 261.63, 349.23], // F
-      [196.00, 246.94, 293.66, 392.00]  // G
-    ];
-    const chord = chords[Math.floor(Math.random() * chords.length)];
-    const now = this.ctx.currentTime;
-    chord.forEach((freq, idx) => {
-      this.playNote(freq, now + idx * 0.4, 2.5);
-    });
-    this.timer = setTimeout(() => this.playChords(), 2400);
-  }
-}
-
-// =========================================================================
 // GAME CONTROLLER
 // =========================================================================
 (function() {
@@ -513,33 +481,24 @@ class RomanticSynth {
   const finaleScreen = document.getElementById('finaleScreen');
   const finaleContent = document.getElementById('finaleContent');
 
-  // Audio setup
+  // Audio setup (pure local song playback)
   const bgAudio = document.getElementById('bgAudio');
   const musicBtn = document.getElementById('musicBtn');
   const musicLabel = document.getElementById('musicLabel');
-  const synth = new RomanticSynth();
   let audioActive = false;
 
   function toggleMusic() {
     if (!audioActive) {
       bgAudio.src = CFG.songFile || 'song.mp3';
-      const playPromise = bgAudio.play();
-      if (playPromise !== undefined) {
-        playPromise.then(() => {
-          musicBtn.classList.add('playing');
-          musicLabel.textContent = 'playing ♥';
-          audioActive = true;
-        }).catch(() => {
-          // If song.mp3 fails or isn't found, fallback smoothly to romantic synthesizer!
-          synth.start();
-          musicBtn.classList.add('playing');
-          musicLabel.textContent = 'melody ♥';
-          audioActive = true;
-        });
-      }
+      bgAudio.play().then(() => {
+        musicBtn.classList.add('playing');
+        musicLabel.textContent = 'playing ♥';
+        audioActive = true;
+      }).catch((e) => {
+        console.log("Audio waiting for song.mp3 or user gesture:", e);
+      });
     } else {
       bgAudio.pause();
-      synth.stop();
       musicBtn.classList.remove('playing');
       musicLabel.textContent = 'our song';
       audioActive = false;
@@ -783,11 +742,31 @@ class RomanticSynth {
     }
   }
 
+  function initHeartsBg() {
+    const container = document.getElementById('heartsBg');
+    if (!container) return;
+    const glyphs = ['♥', '♡'];
+    const count = window.innerWidth < 600 ? 24 : 38;
+    for (let i = 0; i < count; i++) {
+      const h = document.createElement('div');
+      h.className = 'bg-heart' + (Math.random() < 0.3 ? ' gold' : '');
+      h.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
+      h.style.left = Math.random() * 100 + 'vw';
+      h.style.top = Math.random() * 100 + 'vh';
+      const size = 12 + Math.random() * 20;
+      h.style.fontSize = size + 'px';
+      h.style.animationDuration = (5 + Math.random() * 6) + 's';
+      h.style.animationDelay = (Math.random() * 5) + 's';
+      container.appendChild(h);
+    }
+  }
+
   function escapeHtml(s) {
     return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
   // Initial render
+  initHeartsBg();
   renderDots();
   renderNote();
   renderBoard();
