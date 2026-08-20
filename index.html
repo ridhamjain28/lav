@@ -67,6 +67,7 @@
     100% { transform: translateY(0) rotate(0deg); }
   }
 
+  /* Layout & columns */
   .app-wrap {
     position: relative;
     z-index: 1;
@@ -75,6 +76,166 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    transition: max-width 0.3s ease;
+  }
+
+  @media (min-width: 860px) {
+    .app-wrap {
+      max-width: 900px;
+    }
+  }
+
+  .main-layout {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  @media (min-width: 860px) {
+    .main-layout {
+      display: grid;
+      grid-template-columns: 440px 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+  }
+
+  .board-column {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* The Diary Panel */
+  .diary-card {
+    width: 100%;
+    background: radial-gradient(120% 100% at 50% 0%, #351c3f 0%, var(--panel) 100%);
+    border: 1.5px solid var(--gold-soft);
+    border-radius: 16px;
+    padding: 24px 20px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.4), inset 0 0 20px rgba(223, 178, 119, 0.04);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .diary-header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(223, 178, 119, 0.2);
+    position: relative;
+  }
+
+  .diary-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .diary-title {
+    font-family: 'Caveat', cursive;
+    font-size: 32px;
+    color: var(--gold);
+    line-height: 1.1;
+    font-weight: 700;
+  }
+
+  .diary-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 240px;
+  }
+
+  .diary-entry {
+    font-family: 'Caveat', cursive;
+    font-size: 24px;
+    color: var(--gold);
+    line-height: 1.4;
+    padding: 6px 10px 8px;
+    border-bottom: 1px dashed rgba(223, 178, 119, 0.25);
+    transition: all 0.4s ease;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+  }
+
+  .diary-entry.unlocked {
+    animation: writeLine 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .diary-entry.empty {
+    opacity: 0.25;
+    color: var(--muted);
+    font-size: 20px;
+    letter-spacing: 3px;
+  }
+
+  @keyframes writeLine {
+    0% { opacity: 0; transform: translateX(-12px); }
+    100% { opacity: 1; transform: translateX(0); }
+  }
+
+  /* Hearty "yayyyyy" Celebration Overlay */
+  .yay-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .yay-overlay.show {
+    opacity: 1;
+  }
+
+  .yay-popup {
+    background: radial-gradient(circle at 50% 0%, #4a2155 0%, #25122b 100%);
+    border: 2px solid var(--rose);
+    box-shadow: 0 0 40px rgba(229, 135, 173, 0.4), 0 20px 50px rgba(0,0,0,0.7);
+    border-radius: 24px;
+    padding: 24px 38px;
+    text-align: center;
+    transform: scale(0.4) rotate(-6deg);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .yay-overlay.show .yay-popup {
+    transform: scale(1) rotate(0deg);
+  }
+
+  .yay-hearts {
+    font-size: 32px;
+    margin-bottom: 6px;
+    animation: pulseKiss 1.2s infinite ease-in-out;
+  }
+
+  .yay-text {
+    font-family: 'Caveat', cursive;
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1.1;
+    text-shadow: 0 0 15px rgba(223, 178, 119, 0.5);
+  }
+
+  .yay-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--rose);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: 6px;
   }
 
   /* top bar */
@@ -401,18 +562,38 @@
     <div class="text" id="noteText"></div>
   </div>
 
-  <!-- Main Game Section -->
-  <div id="gameSection" style="width:100%;">
-    <!-- Sudoku Board -->
-    <div class="board" id="board"></div>
+  <!-- Main Game Section & The Diary Layout -->
+  <div class="main-layout" id="mainLayout">
+    <!-- Sudoku Column -->
+    <div id="gameSection" class="board-column">
+      <div class="board" id="board"></div>
 
-    <!-- Controls -->
-    <div class="controls">
-      <button class="btn" id="clearBtn">clear</button>
-      <button class="btn primary" id="checkBtn">unlock line ♥</button>
+      <!-- Controls -->
+      <div class="controls">
+        <button class="btn" id="clearBtn">clear</button>
+        <button class="btn primary" id="checkBtn">unlock line ♥</button>
+      </div>
+
+      <div class="status-text" id="statusText"></div>
     </div>
 
-    <div class="status-text" id="statusText"></div>
+    <!-- The Diary Panel (on the right) -->
+    <div class="diary-card" id="diaryCard">
+      <div class="diary-header">
+        <span class="diary-tag">our secrets</span>
+        <h3 class="diary-title">The diary</h3>
+      </div>
+      <div class="diary-content" id="diaryContent"></div>
+    </div>
+  </div>
+
+  <!-- Hearty "yayyyyy" Celebration Overlay -->
+  <div class="yay-overlay" id="yayOverlay">
+    <div class="yay-popup">
+      <div class="yay-hearts">💖 ✨ 💕</div>
+      <div class="yay-text">yayyyyy! ♥</div>
+      <div class="yay-sub">level cleared</div>
+    </div>
   </div>
 
   <!-- Finale Screen -->
@@ -708,8 +889,36 @@ class SudokuEngine {
   const statusText = document.getElementById('statusText');
   const nativeInput = document.getElementById('nativeInput');
   const gameSection = document.getElementById('gameSection');
+  const diaryCard = document.getElementById('diaryCard');
+  const diaryContentEl = document.getElementById('diaryContent');
+  const yayOverlay = document.getElementById('yayOverlay');
   const finaleScreen = document.getElementById('finaleScreen');
   const finaleContent = document.getElementById('finaleContent');
+
+  function renderDiary(latestUnlockedIdx = -1) {
+    if (!diaryContentEl) return;
+    diaryContentEl.innerHTML = '';
+    for (let i = 0; i < N; i++) {
+      const entry = document.createElement('div');
+      if (levelCompleted[i]) {
+        entry.className = 'diary-entry' + (i === latestUnlockedIdx ? ' unlocked' : '');
+        entry.textContent = PHRASES[i];
+      } else {
+        entry.className = 'diary-entry empty';
+        entry.textContent = '· · · · · · · · · ·';
+      }
+      diaryContentEl.appendChild(entry);
+    }
+  }
+
+  function showYayAnimation() {
+    if (!yayOverlay) return;
+    yayOverlay.classList.add('show');
+    spawnHearts(25);
+    setTimeout(() => {
+      yayOverlay.classList.remove('show');
+    }, 1800);
+  }
 
   // Audio setup
   const bgAudio = document.getElementById('bgAudio');
@@ -925,9 +1134,11 @@ class SudokuEngine {
 
     // Level Solved!
     levelCompleted[currentLevel] = true;
-    spawnHearts();
+    const solvedIdx = currentLevel;
+    showYayAnimation();
     renderDots();
     renderNote();
+    renderDiary(solvedIdx);
 
     if (currentLevel < N - 1) {
       statusText.textContent = `"${lvl.phrase}" unlocked! moving to next line...`;
@@ -939,15 +1150,16 @@ class SudokuEngine {
         renderBoard();
         renderDots();
         renderNote();
-      }, 1200);
+      }, 1400);
     } else {
       setTimeout(() => {
-        gameSection.style.display = 'none';
+        const mainLayout = document.getElementById('mainLayout');
+        if (mainLayout) mainLayout.style.display = 'none';
         document.getElementById('noteCard').style.display = 'none';
         finaleScreen.classList.add('show');
         finaleContent.innerHTML = `"${PHRASES.join(' — ')}"<br><br>${escapeHtml(CFG.finaleMessage)}`;
-        spawnHearts(25);
-      }, 1000);
+        spawnHearts(30);
+      }, 1200);
     }
   });
 
@@ -1110,6 +1322,7 @@ class SudokuEngine {
   initHeartsBg();
   renderDots();
   renderNote();
+  renderDiary();
   renderBoard();
 })();
 </script>
