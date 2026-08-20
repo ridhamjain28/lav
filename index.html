@@ -86,6 +86,12 @@
     margin-bottom: 16px;
   }
 
+  .top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   .music-btn {
     display: flex;
     align-items: center;
@@ -109,6 +115,51 @@
   .music-btn.playing .music-bars span:nth-child(2) { animation-delay: 0.2s; }
   .music-btn.playing .music-bars span:nth-child(3) { animation-delay: 0.4s; }
   @keyframes eq { to { height: 10px; } }
+
+  .kiss-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(229, 135, 173, 0.15);
+    border: 1px solid rgba(229, 135, 173, 0.4);
+    padding: 6px 12px;
+    border-radius: 999px;
+    color: var(--rose);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+    user-select: none;
+  }
+  .kiss-btn:hover {
+    border-color: var(--rose);
+    background: rgba(229, 135, 173, 0.25);
+    transform: scale(1.03);
+  }
+  .kiss-btn:active {
+    transform: scale(0.95);
+  }
+  .kiss-icon {
+    font-size: 13px;
+    animation: pulseKiss 2s infinite ease-in-out;
+  }
+  @keyframes pulseKiss {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.18); }
+  }
+  .kiss-particle {
+    position: fixed;
+    pointer-events: none;
+    z-index: 100;
+    font-size: 20px;
+    animation: floatKiss 1.8s ease-out forwards;
+  }
+  @keyframes floatKiss {
+    0% { transform: translateY(0) scale(0.8) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(-70px) scale(1.5) rotate(15deg); opacity: 0; }
+  }
 
   .level-dots {
     display: flex;
@@ -331,10 +382,17 @@
   <!-- Top bar -->
   <div class="top-bar">
     <div class="level-dots" id="dots"></div>
-    <button class="music-btn" id="musicBtn" aria-label="Toggle song">
-      <div class="music-bars"><span></span><span></span><span></span></div>
-      <span id="musicLabel">our song</span>
-    </button>
+    <div class="top-bar-right">
+      <button class="music-btn" id="musicBtn" aria-label="Toggle song">
+        <div class="music-bars"><span></span><span></span><span></span></div>
+        <span id="musicLabel">our song</span>
+      </button>
+      <button class="kiss-btn" id="kissBtn" aria-label="Pending kisses counter">
+        <span class="kiss-icon">💋</span>
+        <span id="kissCount">0</span>
+        <span>kisses</span>
+      </button>
+    </div>
   </div>
 
   <!-- Note so far -->
@@ -369,11 +427,10 @@
 
 <script>
 // =========================================================================
-// 💌 CUSTOMIZE YOUR MESSAGES HERE (Change or add lines anytime!)
+// 💌 CUSTOMIZE YOUR MESSAGES & CONFIGURATION HERE
 // =========================================================================
 window.LOVE_CONFIG = {
-  // Each item here represents a puzzle level.
-  // When completed, it reveals this phrase and unlocks the next level!
+  // Each item here represents a puzzle level phrase:
   phrases: [
     "Hi sweetaa",
     "How are you",
@@ -383,12 +440,178 @@ window.LOVE_CONFIG = {
     "Forever yours"
   ],
 
-  // The grand finale message displayed when all puzzles are solved:
+  // Grand finale message displayed when all puzzles are solved:
   finaleMessage: "Every moment with you is my favorite puzzle solved. I love you endlessly ♥",
 
   // Audio file name (place your song.mp3 in the project folder):
-  songFile: "song.mp3"
+  songFile: "song.mp3",
+
+  // Optional external webhook URL to send HTTP POST notifications when kisses are added:
+  kissWebhookUrl: "",
+
+  // Permanent global cloud counter settings (synced across all devices & users):
+  cloudCounterNamespace: "lav_love_kisses_app_v1",
+  cloudCounterKey: "pending_kisses",
+
+  // Secret reset key for resetting the counter programmatically
+  secretResetKey: "sweetaa"
 };
+
+// =========================================================================
+// PRESET SUDOKU PUZZLES (Matches solutions.md)
+// =========================================================================
+const PRESET_LEVELS = [
+  {
+    phrase: "Hi sweetaa",
+    puzzle: [
+      [0,8,0, 0,0,6, 9,0,0],
+      [7,5,4, 1,9,0, 0,3,6],
+      [0,9,0, 8,0,0, 2,0,0],
+      [0,0,9, 0,0,1, 3,0,8],
+      [0,0,7, 0,2,8, 0,9,1],
+      [0,0,0, 0,0,3, 6,0,0],
+      [0,7,0, 0,0,0, 0,6,3],
+      [0,0,5, 0,1,9, 0,0,0],
+      [8,3,0, 0,0,0, 0,5,9]
+    ],
+    solution: [
+      [2,8,3, 7,5,6, 9,1,4],
+      [7,5,4, 1,9,2, 8,3,6],
+      [1,9,6, 8,3,4, 2,7,5],
+      [6,2,9, 5,7,1, 3,4,8],
+      [3,4,7, 6,2,8, 5,9,1],
+      [5,1,8, 9,4,3, 6,2,7],
+      [9,7,1, 2,8,5, 4,6,3],
+      [4,6,5, 3,1,9, 7,8,2],
+      [8,3,2, 4,6,7, 1,5,9]
+    ]
+  },
+  {
+    phrase: "How are you",
+    puzzle: [
+      [7,6,0, 0,0,5, 0,0,2],
+      [0,0,0, 9,1,0, 0,4,5],
+      [0,0,5, 6,0,2, 7,3,0],
+      [0,7,0, 0,0,0, 0,0,6],
+      [4,2,3, 5,0,0, 0,0,9],
+      [0,0,6, 0,2,0, 5,0,0],
+      [0,3,0, 0,6,0, 0,0,0],
+      [2,5,8, 0,9,0, 0,0,7],
+      [6,0,0, 2,0,0, 9,8,0]
+    ],
+    solution: [
+      [7,6,4, 3,8,5, 1,9,2],
+      [3,8,2, 9,1,7, 6,4,5],
+      [9,1,5, 6,4,2, 7,3,8],
+      [5,7,1, 8,3,9, 4,2,6],
+      [4,2,3, 5,7,6, 8,1,9],
+      [8,9,6, 1,2,4, 5,7,3],
+      [1,3,9, 7,6,8, 2,5,4],
+      [2,5,8, 4,9,1, 3,6,7],
+      [6,4,7, 2,5,3, 9,8,1]
+    ]
+  },
+  {
+    phrase: "I miss you",
+    puzzle: [
+      [0,0,5, 0,0,6, 1,0,0],
+      [3,6,1, 0,0,5, 0,0,4],
+      [0,9,0, 1,2,0, 5,0,0],
+      [2,0,3, 0,0,1, 0,0,0],
+      [6,0,4, 0,0,0, 0,0,7],
+      [0,8,9, 0,0,0, 0,0,0],
+      [0,0,0, 0,6,0, 0,0,5],
+      [5,0,0, 9,1,0, 7,3,0],
+      [9,7,6, 3,5,2, 4,0,0]
+    ],
+    solution: [
+      [8,2,5, 7,4,6, 1,9,3],
+      [3,6,1, 8,9,5, 2,7,4],
+      [4,9,7, 1,2,3, 5,6,8],
+      [2,5,3, 6,7,1, 8,4,9],
+      [6,1,4, 2,8,9, 3,5,7],
+      [7,8,9, 5,3,4, 6,1,2],
+      [1,3,8, 4,6,7, 9,2,5],
+      [5,4,2, 9,1,8, 7,3,6],
+      [9,7,6, 3,5,2, 4,8,1]
+    ]
+  },
+  {
+    phrase: "When will we meet",
+    puzzle: [
+      [2,0,0, 0,9,0, 8,7,0],
+      [0,0,0, 0,0,2, 3,0,5],
+      [0,0,0, 0,6,4, 0,1,0],
+      [0,2,8, 9,1,7, 6,4,3],
+      [0,0,1, 0,0,3, 9,0,7],
+      [0,0,0, 0,0,6, 0,0,1],
+      [0,0,0, 2,3,0, 4,0,6],
+      [4,0,0, 0,0,8, 0,0,2],
+      [0,0,0, 4,0,1, 0,0,8]
+    ],
+    solution: [
+      [2,3,6, 1,9,5, 8,7,4],
+      [1,9,4, 7,8,2, 3,6,5],
+      [7,8,5, 3,6,4, 2,1,9],
+      [5,2,8, 9,1,7, 6,4,3],
+      [6,4,1, 5,2,3, 9,8,7],
+      [9,7,3, 8,4,6, 5,2,1],
+      [8,1,7, 2,3,9, 4,5,6],
+      [4,5,9, 6,7,8, 1,3,2],
+      [3,6,2, 4,5,1, 7,9,8]
+    ]
+  },
+  {
+    phrase: "I love you",
+    puzzle: [
+      [0,0,0, 3,2,0, 8,0,9],
+      [0,8,0, 0,4,0, 0,7,0],
+      [5,3,0, 0,8,9, 0,0,4],
+      [0,2,0, 0,5,0, 7,9,0],
+      [0,6,0, 0,3,7, 0,0,0],
+      [0,0,0, 0,9,1, 0,0,3],
+      [0,1,4, 9,0,3, 0,8,0],
+      [0,0,8, 0,6,0, 0,4,1],
+      [0,0,0, 0,0,8, 2,0,7]
+    ],
+    solution: [
+      [7,4,1, 3,2,6, 8,5,9],
+      [9,8,6, 1,4,5, 3,7,2],
+      [5,3,2, 7,8,9, 6,1,4],
+      [1,2,3, 6,5,4, 7,9,8],
+      [4,6,9, 8,3,7, 1,2,5],
+      [8,5,7, 2,9,1, 4,6,3],
+      [2,1,4, 9,7,3, 5,8,6],
+      [3,7,8, 5,6,2, 9,4,1],
+      [6,9,5, 4,1,8, 2,3,7]
+    ]
+  },
+  {
+    phrase: "Forever yours",
+    puzzle: [
+      [0,5,0, 0,2,0, 6,7,8],
+      [0,3,0, 1,0,6, 0,9,0],
+      [2,8,6, 0,0,0, 1,3,4],
+      [0,7,0, 5,0,0, 0,0,0],
+      [3,4,0, 0,9,0, 0,0,0],
+      [0,0,0, 6,0,7, 0,5,0],
+      [0,1,0, 0,0,2, 0,4,0],
+      [0,0,4, 0,0,0, 5,0,7],
+      [7,0,3, 4,0,5, 0,0,9]
+    ],
+    solution: [
+      [1,5,9, 3,2,4, 6,7,8],
+      [4,3,7, 1,8,6, 2,9,5],
+      [2,8,6, 7,5,9, 1,3,4],
+      [6,7,1, 5,4,3, 9,8,2],
+      [3,4,5, 2,9,8, 7,6,1],
+      [8,9,2, 6,1,7, 4,5,3],
+      [5,1,8, 9,7,2, 3,4,6],
+      [9,6,4, 8,3,1, 5,2,7],
+      [7,2,3, 4,6,5, 8,1,9]
+    ]
+  }
+];
 
 // =========================================================================
 // SUDOKU ENGINE & PUZZLE GENERATOR
@@ -433,7 +656,6 @@ class SudokuEngine {
     const solution = Array.from({length: 9}, () => Array(9).fill(0));
     this.solve(solution);
 
-    // Create puzzle by removing cells while keeping enough clues
     const puzzle = solution.map(row => row.slice());
     const positions = [];
     for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) positions.push([r, c]);
@@ -458,8 +680,15 @@ class SudokuEngine {
   const PHRASES = CFG.phrases;
   const N = PHRASES.length;
 
-  // Pre-generate puzzles for all configured phrases
-  const levels = PHRASES.map(phrase => {
+  // Use preset levels for matching solutions.md, or generate dynamically for extra levels
+  const levels = PHRASES.map((phrase, idx) => {
+    if (PRESET_LEVELS[idx] && PRESET_LEVELS[idx].phrase === phrase) {
+      return {
+        phrase: PRESET_LEVELS[idx].phrase,
+        puzzle: PRESET_LEVELS[idx].puzzle.map(row => row.slice()),
+        solution: PRESET_LEVELS[idx].solution.map(row => row.slice())
+      };
+    }
     const { puzzle, solution } = SudokuEngine.generate(34);
     return { phrase, puzzle, solution };
   });
@@ -472,6 +701,7 @@ class SudokuEngine {
   // DOM Elements
   const dotsEl = document.getElementById('dots');
   const noteTextEl = document.getElementById('noteText');
+  const noteTitleEl = document.getElementById('noteTitle');
   const boardEl = document.getElementById('board');
   const clearBtn = document.getElementById('clearBtn');
   const checkBtn = document.getElementById('checkBtn');
@@ -481,7 +711,7 @@ class SudokuEngine {
   const finaleScreen = document.getElementById('finaleScreen');
   const finaleContent = document.getElementById('finaleContent');
 
-  // Audio setup (pure local song playback)
+  // Audio setup
   const bgAudio = document.getElementById('bgAudio');
   const musicBtn = document.getElementById('musicBtn');
   const musicLabel = document.getElementById('musicLabel');
@@ -506,13 +736,12 @@ class SudokuEngine {
   }
   musicBtn.addEventListener('click', toggleMusic);
 
-  // Auto-attempt music on first click anywhere
   document.addEventListener('click', function onFirstClick() {
     if (!audioActive) toggleMusic();
     document.removeEventListener('click', onFirstClick);
   }, { once: true });
 
-  // Native input focus for iPhone & Android
+  // Native input focus for mobile keypads
   function triggerNativeInput() {
     nativeInput.value = '';
     nativeInput.focus();
@@ -520,16 +749,12 @@ class SudokuEngine {
 
   nativeInput.addEventListener('input', (e) => {
     const val = e.target.value.replace(/[^1-9]/g, '');
-    if (val) {
-      setCellVal(parseInt(val.slice(-1), 10));
-    }
+    if (val) setCellVal(parseInt(val.slice(-1), 10));
     nativeInput.value = '';
   });
 
   nativeInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Backspace' || e.key === 'Delete') {
-      setCellVal(0);
-    }
+    if (e.key === 'Backspace' || e.key === 'Delete') setCellVal(0);
   });
 
   // Physical PC Keyboard Listener
@@ -550,7 +775,7 @@ class SudokuEngine {
 
   function setCellVal(val) {
     const lvl = levels[currentLevel];
-    if (lvl.puzzle[selected.r][selected.c] !== 0) return; // Given clue
+    if (lvl.puzzle[selected.r][selected.c] !== 0) return;
     userGrids[currentLevel][selected.r][selected.c] = val;
     statusText.textContent = '';
     statusText.className = 'status-text';
@@ -716,7 +941,6 @@ class SudokuEngine {
         renderNote();
       }, 1200);
     } else {
-      // Completed all puzzles
       setTimeout(() => {
         gameSection.style.display = 'none';
         document.getElementById('noteCard').style.display = 'none';
@@ -759,6 +983,123 @@ class SudokuEngine {
       h.style.animationDelay = (Math.random() * 5) + 's';
       container.appendChild(h);
     }
+  }
+
+  // =========================================================================
+  // 💋 PENDING KISSES COUNTER & EXTERNAL PING SYSTEM
+  // =========================================================================
+  let kissCount = parseInt(localStorage.getItem('pendingKisses') || '0', 10);
+  const kissBtn = document.getElementById('kissBtn');
+  const kissCountEl = document.getElementById('kissCount');
+
+  function updateKissUI(val) {
+    kissCount = val;
+    if (kissCountEl) kissCountEl.textContent = val;
+    localStorage.setItem('pendingKisses', val.toString());
+  }
+
+  const cloudNs = CFG.cloudCounterNamespace || 'lav_kisses_default';
+  const cloudKey = CFG.cloudCounterKey || 'kisses';
+  const apiBase = `https://api.counterapi.dev/v1/${cloudNs}/${cloudKey}`;
+
+  // Fetch global count on page load
+  fetch(apiBase)
+    .then(r => r.json())
+    .then(data => {
+      if (data && typeof data.count === 'number') {
+        updateKissUI(data.count);
+      }
+    })
+    .catch(() => {
+      updateKissUI(kissCount);
+    });
+
+  function spawnKissParticle() {
+    if (!kissBtn) return;
+    const rect = kissBtn.getBoundingClientRect();
+    const particle = document.createElement('div');
+    particle.className = 'kiss-particle';
+    particle.textContent = ['💋', '💖', '😘', '✨'][Math.floor(Math.random() * 4)];
+    particle.style.left = (rect.left + rect.width / 2 - 10) + 'px';
+    particle.style.top = (rect.top - 10) + 'px';
+    document.body.appendChild(particle);
+    setTimeout(() => particle.remove(), 1800);
+  }
+
+  function addKiss(amount = 1, silent = false) {
+    const newCount = kissCount + amount;
+    updateKissUI(newCount);
+
+    if (!silent) spawnKissParticle();
+
+    // Ping cloud counter API (/up)
+    fetch(`${apiBase}/up`)
+      .then(r => r.json())
+      .then(data => {
+        if (data && typeof data.count === 'number') {
+          updateKissUI(data.count);
+        }
+      })
+      .catch(() => {});
+
+    // Webhook ping if configured
+    if (CFG.kissWebhookUrl) {
+      fetch(CFG.kissWebhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event: 'kiss_added', count: newCount, amount, timestamp: new Date().toISOString() })
+      }).catch(() => {});
+    }
+
+    window.dispatchEvent(new CustomEvent('kissAdded', { detail: { count: newCount, amount } }));
+  }
+
+  function resetKisses() {
+    updateKissUI(0);
+    // Reset on cloud counter API
+    fetch(`${apiBase}/set?count=0`).catch(() => {});
+    localStorage.setItem('pendingKisses', '0');
+    statusText.textContent = 'pending kisses reset to 0 ♥';
+    statusText.className = 'status-text ok';
+    setTimeout(() => { if (statusText.textContent.includes('reset')) statusText.textContent = ''; }, 3000);
+  }
+
+  window.addKiss = addKiss;
+  window.resetKisses = resetKisses;
+
+  if (kissBtn) {
+    kissBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      addKiss(1);
+    });
+  }
+
+  // Secret reset trigger: Triple tap on "letter in progress" header title
+  let titleTaps = 0;
+  let titleTapTimer = null;
+  if (noteTitleEl) {
+    noteTitleEl.addEventListener('click', () => {
+      titleTaps++;
+      clearTimeout(titleTapTimer);
+      if (titleTaps >= 3) {
+        titleTaps = 0;
+        if (confirm("Secret Reset: Reset pending kisses count to 0?")) {
+          resetKisses();
+        }
+      } else {
+        titleTapTimer = setTimeout(() => { titleTaps = 0; }, 800);
+      }
+    });
+  }
+
+  // Inbound URL parameter handlers:
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has('kiss') || urlParams.has('addKiss') || urlParams.has('add_kiss')) {
+    const amt = parseInt(urlParams.get('kiss') || urlParams.get('addKiss') || urlParams.get('add_kiss') || '1', 10);
+    addKiss(isNaN(amt) ? 1 : amt);
+  }
+  if (urlParams.has('resetKisses') || urlParams.has('secretReset') || urlParams.has('reset_kisses')) {
+    resetKisses();
   }
 
   function escapeHtml(s) {
