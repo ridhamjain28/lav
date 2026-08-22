@@ -619,9 +619,8 @@ window.LOVE_CONFIG = {
   // Optional external webhook URL to send HTTP POST notifications when kisses are added:
   kissWebhookUrl: "",
 
-  // Permanent global cloud counter settings (synced across all devices & users):
-  cloudCounterNamespace: "lav_love_kisses_app_v1",
-  cloudCounterKey: "pending_kisses",
+  // Permanent global cloud counter key (synced across all devices & users):
+  cloudCounterKey: "lav_love_kisses_shared_live",
 
   // Secret reset key for resetting the counter programmatically
   secretResetKey: "sweetaa"
@@ -839,6 +838,52 @@ class SudokuEngine {
       removed++;
     }
     return { puzzle, solution };
+  }
+
+  static isSudokuSolved(grid, originalPuzzle) {
+    // 1. Check all cells are filled with valid numbers 1-9 and original given clues are preserved
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        const val = grid[r][c];
+        if (!val || val < 1 || val > 9) return false;
+        if (originalPuzzle && originalPuzzle[r][c] !== 0 && originalPuzzle[r][c] !== val) {
+          return false;
+        }
+      }
+    }
+
+    // 2. Check each row contains numbers 1-9 with no duplicates
+    for (let r = 0; r < 9; r++) {
+      const seen = new Set();
+      for (let c = 0; c < 9; c++) {
+        seen.add(grid[r][c]);
+      }
+      if (seen.size !== 9) return false;
+    }
+
+    // 3. Check each column contains numbers 1-9 with no duplicates
+    for (let c = 0; c < 9; c++) {
+      const seen = new Set();
+      for (let r = 0; r < 9; r++) {
+        seen.add(grid[r][c]);
+      }
+      if (seen.size !== 9) return false;
+    }
+
+    // 4. Check each 3x3 box contains numbers 1-9 with no duplicates
+    for (let br = 0; br < 9; br += 3) {
+      for (let bc = 0; bc < 9; bc += 3) {
+        const seen = new Set();
+        for (let r = br; r < br + 3; r++) {
+          for (let c = bc; c < bc + 3; c++) {
+            seen.add(grid[r][c]);
+          }
+        }
+        if (seen.size !== 9) return false;
+      }
+    }
+
+    return true;
   }
 }
 
@@ -1108,14 +1153,7 @@ class SudokuEngine {
       return;
     }
 
-    let isCorrect = true;
-    for (let r = 0; r < 9 && isCorrect; r++) {
-      for (let c = 0; c < 9; c++) {
-        if (grid[r][c] !== lvl.solution[r][c]) { isCorrect = false; break; }
-      }
-    }
-
-    if (!isCorrect) {
+    if (!SudokuEngine.isSudokuSolved(grid, lvl.puzzle)) {
       statusText.textContent = 'almost there, check your steps ♥';
       statusText.className = 'status-text bad';
       return;
@@ -1187,33 +1225,51 @@ class SudokuEngine {
   }
 
   // =========================================================================
-  // 💋 PENDING KISSES COUNTER & EXTERNAL PING SYSTEM
+  // 💋 PENDING KISSES COUNTER & EXTERNAL PING SYSTEM (LIVE)
   // =========================================================================
-  let kissCount = parseInt(localStorage.getItem('pendingKisses') || '0', 10);
   const kissBtn = document.getElementById('kissBtn');
   const kissCountEl = document.getElementById('kissCount');
+  const cloudKey = CFG.cloudCounterKey || 'lav_love_kisses_app_v2';
+  const apiBase = 'https://countapi.mileshilliard.com/api/v1';
 
-  function updateKissUI(val) {
+  let kissCount = parseInt(localStorage.getItem('pendingKisses') || '0', 10);
+  if (isNaN(kissCount)) kissCount = 0;
+  if (kissCountEl) kissCountEl.textContent = kissCount;
+
+  function updateKissUI(val, persistLocal = true) {
+    if (typeof val !== 'number' || isNaN(val)) return;
     kissCount = val;
     if (kissCountEl) kissCountEl.textContent = val;
-    localStorage.setItem('pendingKisses', val.toString());
+    if (persistLocal) {
+      localStorage.setItem('pendingKisses', val.toString());
+    }
   }
 
-  const cloudNs = CFG.cloudCounterNamespace || 'lav_kisses_default';
-  const cloudKey = CFG.cloudCounterKey || 'kisses';
-  const apiBase = `https://api.counterapi.dev/v1/${cloudNs}/${cloudKey}`;
+  // Fetch live count from cloud counter
+  function fetchLiveCount() {
+    fetch(`${apiBase}/get/${cloudKey}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data && typeof data.value === 'number') {
+          // Sync with highest counter value
+          const synced = Math.max(kissCount, data.value);
+          updateKissUI(synced);
+        }
+      })
+      .catch(() => {});
+  }
 
-  // Fetch global count on page load
-  fetch(apiBase)
-    .then(r => r.json())
-    .then(data => {
-      if (data && typeof data.count === 'number') {
-        updateKissUI(data.count);
-      }
-    })
-    .catch(() => {
-      updateKissUI(kissCount);
-    });
+  // Initial fetch and live polling every 3.5 seconds
+  fetchLiveCount();
+  setInterval(fetchLiveCount, 3500);
+
+  // Sync across tabs immediately
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'pendingKisses') {
+      const val = parseInt(e.newValue || '0', 10);
+      if (!isNaN(val)) updateKissUI(val, false);
+    }
+  });
 
   function spawnKissParticle() {
     if (!kissBtn) return;
@@ -1233,12 +1289,12 @@ class SudokuEngine {
 
     if (!silent) spawnKissParticle();
 
-    // Ping cloud counter API (/up)
-    fetch(`${apiBase}/up`)
+    // Increment count on cloud server
+    fetch(`${apiBase}/hit/${cloudKey}`)
       .then(r => r.json())
       .then(data => {
-        if (data && typeof data.count === 'number') {
-          updateKissUI(data.count);
+        if (data && typeof data.value === 'number') {
+          updateKissUI(Math.max(newCount, data.value));
         }
       })
       .catch(() => {});
@@ -1258,7 +1314,7 @@ class SudokuEngine {
   function resetKisses() {
     updateKissUI(0);
     // Reset on cloud counter API
-    fetch(`${apiBase}/set?count=0`).catch(() => {});
+    fetch(`${apiBase}/set/${cloudKey}?value=0`).catch(() => {});
     localStorage.setItem('pendingKisses', '0');
     statusText.textContent = 'pending kisses reset to 0 ♥';
     statusText.className = 'status-text ok';
