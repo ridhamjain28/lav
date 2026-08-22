@@ -160,6 +160,13 @@
     animation: writeLine 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
+  /* Stagger-in for diary entries restored on page reload */
+  .diary-entry.stagger-in {
+    opacity: 0;
+    animation: writeLine 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation-delay: var(--stagger-delay, 0ms);
+  }
+
   .diary-entry.empty {
     opacity: 0.25;
     color: var(--muted);
@@ -246,7 +253,8 @@
     padding: 8px 16px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 8px 12px;
     backdrop-filter: blur(10px);
     margin-bottom: 16px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
@@ -301,10 +309,10 @@
 
   .player-progress-wrap {
     flex: 1;
+    min-width: 120px;
     display: flex;
     align-items: center;
     gap: 8px;
-    min-width: 0;
   }
 
   .player-time {
@@ -1028,6 +1036,8 @@ class SudokuEngine {
   const userGrids = levels.map(lvl => lvl.puzzle.map(row => row.slice()));
   const levelCompleted = new Array(N).fill(false);
   let selected = { r: 0, c: 0 };
+  let currentSongIndex = 0; // declared here so loadGameState can restore it before music init
+  let isSeeking = false;
 
   // =========================================================================
   // 💾 LOCALSTORAGE AUTOSAVE (Google Forms-like persistence)
@@ -1039,7 +1049,8 @@ class SudokuEngine {
       const data = {
         currentLevel,
         levelCompleted,
-        userGrids
+        userGrids,
+        currentSongIndex
       };
       localStorage.setItem(GAME_STORAGE_KEY, JSON.stringify(data));
     } catch (e) {
@@ -1075,6 +1086,15 @@ class SudokuEngine {
         if (typeof data.currentLevel === 'number' && data.currentLevel >= 0 && data.currentLevel < N) {
           currentLevel = data.currentLevel;
         }
+        // If the saved currentLevel is already completed (e.g. page was closed
+        // during the 1.4s transition timeout), advance to the next incomplete level.
+        while (currentLevel < N - 1 && levelCompleted[currentLevel]) {
+          currentLevel++;
+        }
+        // Restore song index
+        if (typeof data.currentSongIndex === 'number') {
+          currentSongIndex = data.currentSongIndex;
+        }
         return true;
       }
     } catch (e) {
@@ -1099,13 +1119,26 @@ class SudokuEngine {
   const finaleScreen = document.getElementById('finaleScreen');
   const finaleContent = document.getElementById('finaleContent');
 
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
   function renderDiary(latestUnlockedIdx = -1) {
     if (!diaryContentEl) return;
     diaryContentEl.innerHTML = '';
+    const isInitialRestore = latestUnlockedIdx === -1;
     for (let i = 0; i < N; i++) {
       const entry = document.createElement('div');
       if (levelCompleted[i]) {
-        entry.className = 'diary-entry' + (i === latestUnlockedIdx ? ' unlocked' : '');
+        if (i === latestUnlockedIdx) {
+          entry.className = 'diary-entry unlocked';
+        } else if (isInitialRestore) {
+          // Stagger-in animation for restored completed entries on page load
+          entry.className = 'diary-entry stagger-in';
+          entry.style.setProperty('--stagger-delay', `${i * 80}ms`);
+        } else {
+          entry.className = 'diary-entry';
+        }
         entry.textContent = PHRASES[i];
       } else {
         entry.className = 'diary-entry empty';
@@ -1138,8 +1171,6 @@ class SudokuEngine {
   const durationTimeEl = document.getElementById('durationTime');
 
   const songPlaylist = (CFG.songFiles && CFG.songFiles.length) ? CFG.songFiles : (CFG.songFile ? [CFG.songFile] : ['song.mp3', 'song2.mp3', 'song3.mp3']);
-  let currentSongIndex = 0;
-  let isSeeking = false;
 
   function formatTime(seconds) {
     if (isNaN(seconds) || !isFinite(seconds) || seconds < 0) return '0:00';
@@ -1223,8 +1254,8 @@ class SudokuEngine {
     });
   }
 
-  // Preload initial song
-  bgAudio.src = songPlaylist[0];
+  // Preload the last-played song (index restored from localStorage, or 0 on first visit)
+  bgAudio.src = songPlaylist[currentSongIndex % songPlaylist.length];
 
   // Auto-start music on first interaction
   document.addEventListener('click', function onFirstClick() {
@@ -1244,6 +1275,8 @@ class SudokuEngine {
     const val = e.target.value.replace(/[^1-9]/g, '');
     if (val) setCellVal(parseInt(val.slice(-1), 10));
     nativeInput.value = '';
+    // Dismiss mobile keyboard after each number entry
+    nativeInput.blur();
   });
 
   nativeInput.addEventListener('keydown', (e) => {
@@ -1380,9 +1413,12 @@ class SudokuEngine {
   }
 
   clearBtn.addEventListener('click', () => {
+    // Resets the in-memory grid only — does NOT write to localStorage.
+    // If the user accidentally clears and then refreshes, the last autosaved
+    // numbers (from their last keypress) will be restored. Only a refresh
+    // AFTER clear followed by new entries will overwrite the save.
     userGrids[currentLevel] = levels[currentLevel].puzzle.map(row => row.slice());
     statusText.textContent = '';
-    saveGameState();
     renderBoard();
   });
 
@@ -1611,10 +1647,6 @@ class SudokuEngine {
     resetKisses();
   }
 
-  function escapeHtml(s) {
-    return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-
   // Initial load: restore saved state (if any)
   loadGameState();
 
@@ -1632,6 +1664,34 @@ class SudokuEngine {
     finaleScreen.classList.add('show');
     finaleContent.innerHTML = `"${PHRASES.join(' — ')}"<br><br>${escapeHtml(CFG.finaleMessage)}`;
   }
+
+  // =========================================================================
+  // 🛡️ ACCIDENTAL REFRESH PROTECTION
+  // Warns if the user is mid-solve and the in-memory grid differs from what's
+  // saved in localStorage (i.e. they used "clear" and haven't re-entered yet).
+  // =========================================================================
+  window.addEventListener('beforeunload', (e) => {
+    if (levelCompleted.every(Boolean)) return; // Finale: no warning needed
+    const savedRaw = localStorage.getItem(GAME_STORAGE_KEY);
+    let savedGrid = null;
+    try {
+      const savedData = JSON.parse(savedRaw);
+      if (savedData && savedData.userGrids && savedData.userGrids[currentLevel]) {
+        savedGrid = savedData.userGrids[currentLevel];
+      }
+    } catch (_) {}
+    const current = userGrids[currentLevel];
+    const hasUnsaved = savedGrid && current.some((row, r) =>
+      row.some((val, c) => {
+        const given = levels[currentLevel].puzzle[r][c];
+        return given === 0 && val !== (savedGrid[r] ? savedGrid[r][c] : 0);
+      })
+    );
+    if (hasUnsaved) {
+      e.preventDefault();
+      e.returnValue = ''; // Required for Chrome
+    }
+  });
 })();
 </script>
 </body>
