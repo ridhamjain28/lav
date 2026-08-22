@@ -237,35 +237,132 @@
     margin-bottom: 16px;
   }
 
-  .top-bar-right {
+  /* full music player */
+  .music-player {
+    width: 100%;
+    background: rgba(40, 23, 48, 0.75);
+    border: 1px solid var(--gold-soft);
+    border-radius: 999px;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    backdrop-filter: blur(10px);
+    margin-bottom: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  }
+
+  .player-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .player-btn {
+    background: rgba(223, 178, 119, 0.1);
+    border: 1px solid rgba(223, 178, 119, 0.3);
+    color: var(--gold);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+  }
+
+  .player-btn:hover {
+    background: var(--gold);
+    color: var(--bg);
+    border-color: var(--gold);
+    transform: scale(1.08);
+  }
+
+  .player-btn:active {
+    transform: scale(0.95);
+  }
+
+  .player-btn.play-pause-btn {
+    width: 32px;
+    height: 32px;
+    background: rgba(229, 135, 173, 0.2);
+    border-color: var(--rose);
+    color: var(--rose);
+  }
+
+  .player-btn.play-pause-btn:hover {
+    background: var(--rose);
+    color: var(--bg);
+    border-color: var(--rose);
+  }
+
+  .player-progress-wrap {
+    flex: 1;
     display: flex;
     align-items: center;
     gap: 8px;
+    min-width: 0;
   }
 
-  .music-btn {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    background: rgba(40, 23, 48, 0.7);
-    border: 1px solid var(--gold-soft);
-    padding: 6px 14px;
-    border-radius: 999px;
-    color: var(--gold);
+  .player-time {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.06em;
-    cursor: pointer;
-    backdrop-filter: blur(8px);
-    transition: all 0.2s ease;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+    min-width: 26px;
   }
-  .music-btn:hover { border-color: var(--gold); background: rgba(51, 29, 61, 0.9); }
-  .music-bars { display: flex; align-items: flex-end; gap: 2px; height: 10px; }
-  .music-bars span { width: 2px; height: 3px; background: var(--gold); border-radius: 1px; }
-  .music-btn.playing .music-bars span { animation: eq 0.8s ease-in-out infinite alternate; }
-  .music-btn.playing .music-bars span:nth-child(2) { animation-delay: 0.2s; }
-  .music-btn.playing .music-bars span:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes eq { to { height: 10px; } }
+  .player-time.right {
+    text-align: right;
+  }
+
+  .player-seekbar {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    background: rgba(248, 238, 233, 0.15);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .player-seekbar::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--gold);
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(223, 178, 119, 0.6);
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+
+  .player-seekbar::-webkit-slider-thumb:hover {
+    transform: scale(1.3);
+    background: var(--rose);
+  }
+
+  .player-seekbar::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--gold);
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(223, 178, 119, 0.6);
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+
+  .player-seekbar::-moz-range-thumb:hover {
+    transform: scale(1.3);
+    background: var(--rose);
+  }
 
   .kiss-btn {
     display: flex;
@@ -526,23 +623,38 @@
 <input id="nativeInput" type="tel" inputmode="numeric" pattern="[1-9]*" maxlength="1" autocomplete="off">
 
 <!-- HTML5 local background audio -->
-<audio id="bgAudio" loop preload="auto" src="song.mp3"></audio>
+<audio id="bgAudio" preload="auto"></audio>
 
 <div class="app-wrap">
 
   <!-- Top bar -->
   <div class="top-bar">
     <div class="level-dots" id="dots"></div>
-    <div class="top-bar-right">
-      <button class="music-btn" id="musicBtn" aria-label="Toggle song">
-        <div class="music-bars"><span></span><span></span><span></span></div>
-        <span id="musicLabel">our song</span>
+    <button class="kiss-btn" id="kissBtn" aria-label="Pending kisses counter">
+      <span class="kiss-icon">💋</span>
+      <span id="kissCount">0</span>
+      <span>kisses</span>
+    </button>
+  </div>
+
+  <!-- Full Music Player -->
+  <div class="music-player" id="musicPlayer">
+    <div class="player-controls">
+      <button class="player-btn" id="prevBtn" aria-label="Previous song" title="Previous song">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
       </button>
-      <button class="kiss-btn" id="kissBtn" aria-label="Pending kisses counter">
-        <span class="kiss-icon">💋</span>
-        <span id="kissCount">0</span>
-        <span>kisses</span>
+      <button class="player-btn play-pause-btn" id="playPauseBtn" aria-label="Play / Pause" title="Play">
+        <svg id="playIcon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        <svg id="pauseIcon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
       </button>
+      <button class="player-btn" id="nextBtn" aria-label="Next song" title="Next song">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+      </button>
+    </div>
+    <div class="player-progress-wrap">
+      <span class="player-time" id="currentTime">0:00</span>
+      <input type="range" class="player-seekbar" id="seekBar" min="0" max="100" value="0" step="0.1" aria-label="Seek music track">
+      <span class="player-time right" id="durationTime">0:00</span>
     </div>
   </div>
 
@@ -613,8 +725,12 @@ window.LOVE_CONFIG = {
   // Grand finale message displayed when all puzzles are solved:
   finaleMessage: "Every moment with you is my favorite puzzle solved. I love you endlessly ♥",
 
-  // Audio file name (place your song.mp3 in the project folder):
-  songFile: "song.mp3",
+  // Audio playlist files (place in project folder):
+  songFiles: [
+    "song.mp3",
+    "song2.mp3",
+    "song3.mp3"
+  ],
 
   // Optional external webhook URL to send HTTP POST notifications when kisses are added:
   kissWebhookUrl: "",
@@ -913,6 +1029,60 @@ class SudokuEngine {
   const levelCompleted = new Array(N).fill(false);
   let selected = { r: 0, c: 0 };
 
+  // =========================================================================
+  // 💾 LOCALSTORAGE AUTOSAVE (Google Forms-like persistence)
+  // =========================================================================
+  const GAME_STORAGE_KEY = 'lav_sudoku_game_state_v1';
+
+  function saveGameState() {
+    try {
+      const data = {
+        currentLevel,
+        levelCompleted,
+        userGrids
+      };
+      localStorage.setItem(GAME_STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {
+      console.warn("Autosave state error:", e);
+    }
+  }
+
+  function loadGameState() {
+    try {
+      const raw = localStorage.getItem(GAME_STORAGE_KEY);
+      if (!raw) return false;
+      const data = JSON.parse(raw);
+      if (data && Array.isArray(data.userGrids)) {
+        for (let i = 0; i < N && i < data.userGrids.length; i++) {
+          if (Array.isArray(data.userGrids[i])) {
+            for (let r = 0; r < 9; r++) {
+              for (let c = 0; c < 9; c++) {
+                const given = levels[i].puzzle[r][c];
+                if (given !== 0) {
+                  userGrids[i][r][c] = given;
+                } else if (typeof data.userGrids[i][r][c] === 'number') {
+                  userGrids[i][r][c] = data.userGrids[i][r][c];
+                }
+              }
+            }
+          }
+        }
+        if (Array.isArray(data.levelCompleted)) {
+          for (let i = 0; i < N && i < data.levelCompleted.length; i++) {
+            levelCompleted[i] = Boolean(data.levelCompleted[i]);
+          }
+        }
+        if (typeof data.currentLevel === 'number' && data.currentLevel >= 0 && data.currentLevel < N) {
+          currentLevel = data.currentLevel;
+        }
+        return true;
+      }
+    } catch (e) {
+      console.warn("Load state error:", e);
+    }
+    return false;
+  }
+
   // DOM Elements
   const dotsEl = document.getElementById('dots');
   const noteTextEl = document.getElementById('noteText');
@@ -954,33 +1124,113 @@ class SudokuEngine {
     }, 1800);
   }
 
-  // Audio setup
+  // =========================================================================
+  // 🎵 FULL MUSIC PLAYER (Playlist, Seekbar, Prev/Next, Play/Pause)
+  // =========================================================================
   const bgAudio = document.getElementById('bgAudio');
-  const musicBtn = document.getElementById('musicBtn');
-  const musicLabel = document.getElementById('musicLabel');
-  let audioActive = false;
+  const playPauseBtn = document.getElementById('playPauseBtn');
+  const playIcon = document.getElementById('playIcon');
+  const pauseIcon = document.getElementById('pauseIcon');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const seekBar = document.getElementById('seekBar');
+  const currentTimeEl = document.getElementById('currentTime');
+  const durationTimeEl = document.getElementById('durationTime');
 
-  function toggleMusic() {
-    if (!audioActive) {
-      bgAudio.src = CFG.songFile || 'song.mp3';
-      bgAudio.play().then(() => {
-        musicBtn.classList.add('playing');
-        musicLabel.textContent = 'playing ♥';
-        audioActive = true;
-      }).catch((e) => {
-        console.log("Audio waiting for song.mp3 or user gesture:", e);
-      });
-    } else {
-      bgAudio.pause();
-      musicBtn.classList.remove('playing');
-      musicLabel.textContent = 'our song';
-      audioActive = false;
+  const songPlaylist = (CFG.songFiles && CFG.songFiles.length) ? CFG.songFiles : (CFG.songFile ? [CFG.songFile] : ['song.mp3', 'song2.mp3', 'song3.mp3']);
+  let currentSongIndex = 0;
+  let isSeeking = false;
+
+  function formatTime(seconds) {
+    if (isNaN(seconds) || !isFinite(seconds) || seconds < 0) return '0:00';
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  }
+
+  function loadSong(index, autoPlay = true) {
+    currentSongIndex = (index + songPlaylist.length) % songPlaylist.length;
+    bgAudio.src = songPlaylist[currentSongIndex];
+    if (seekBar) seekBar.value = 0;
+    if (currentTimeEl) currentTimeEl.textContent = '0:00';
+    if (autoPlay) {
+      bgAudio.play().catch(e => console.log("Playback gesture needed:", e));
     }
   }
-  musicBtn.addEventListener('click', toggleMusic);
 
+  function togglePlayPause() {
+    if (bgAudio.paused) {
+      if (!bgAudio.src || bgAudio.src === '' || bgAudio.src.endsWith('/')) {
+        loadSong(currentSongIndex, true);
+      } else {
+        bgAudio.play().catch(e => console.log("Play error:", e));
+      }
+    } else {
+      bgAudio.pause();
+    }
+  }
+
+  function updatePlayPauseUI() {
+    if (!playIcon || !pauseIcon || !playPauseBtn) return;
+    if (bgAudio.paused) {
+      playIcon.style.display = 'block';
+      pauseIcon.style.display = 'none';
+      playPauseBtn.title = 'Play';
+    } else {
+      playIcon.style.display = 'none';
+      pauseIcon.style.display = 'block';
+      playPauseBtn.title = 'Pause';
+    }
+  }
+
+  bgAudio.addEventListener('play', updatePlayPauseUI);
+  bgAudio.addEventListener('pause', updatePlayPauseUI);
+
+  bgAudio.addEventListener('timeupdate', () => {
+    if (!isSeeking && bgAudio.duration) {
+      const pct = (bgAudio.currentTime / bgAudio.duration) * 100;
+      if (seekBar) seekBar.value = pct;
+      if (currentTimeEl) currentTimeEl.textContent = formatTime(bgAudio.currentTime);
+      if (durationTimeEl) durationTimeEl.textContent = formatTime(bgAudio.duration);
+    }
+  });
+
+  bgAudio.addEventListener('loadedmetadata', () => {
+    if (durationTimeEl) durationTimeEl.textContent = formatTime(bgAudio.duration);
+  });
+
+  // Automatically advance to the next song when finished
+  bgAudio.addEventListener('ended', () => {
+    loadSong(currentSongIndex + 1, true);
+  });
+
+  if (playPauseBtn) playPauseBtn.addEventListener('click', togglePlayPause);
+  if (prevBtn) prevBtn.addEventListener('click', () => loadSong(currentSongIndex - 1, !bgAudio.paused));
+  if (nextBtn) nextBtn.addEventListener('click', () => loadSong(currentSongIndex + 1, !bgAudio.paused));
+
+  if (seekBar) {
+    seekBar.addEventListener('input', () => {
+      isSeeking = true;
+      if (bgAudio.duration && currentTimeEl) {
+        currentTimeEl.textContent = formatTime((seekBar.value / 100) * bgAudio.duration);
+      }
+    });
+    seekBar.addEventListener('change', () => {
+      if (bgAudio.duration) {
+        bgAudio.currentTime = (seekBar.value / 100) * bgAudio.duration;
+      }
+      isSeeking = false;
+    });
+  }
+
+  // Preload initial song
+  bgAudio.src = songPlaylist[0];
+
+  // Auto-start music on first interaction
   document.addEventListener('click', function onFirstClick() {
-    if (!audioActive) toggleMusic();
+    if (bgAudio.paused) {
+      bgAudio.play().catch(() => {});
+    }
     document.removeEventListener('click', onFirstClick);
   }, { once: true });
 
@@ -1022,6 +1272,7 @@ class SudokuEngine {
     userGrids[currentLevel][selected.r][selected.c] = val;
     statusText.textContent = '';
     statusText.className = 'status-text';
+    saveGameState();
     renderBoard();
   }
 
@@ -1131,6 +1382,7 @@ class SudokuEngine {
   clearBtn.addEventListener('click', () => {
     userGrids[currentLevel] = levels[currentLevel].puzzle.map(row => row.slice());
     statusText.textContent = '';
+    saveGameState();
     renderBoard();
   });
 
@@ -1162,6 +1414,7 @@ class SudokuEngine {
     // Level Solved!
     levelCompleted[currentLevel] = true;
     const solvedIdx = currentLevel;
+    saveGameState();
     showYayAnimation();
     renderDots();
     renderNote();
@@ -1174,6 +1427,7 @@ class SudokuEngine {
         currentLevel++;
         selected = { r: 0, c: 0 };
         statusText.textContent = '';
+        saveGameState();
         renderBoard();
         renderDots();
         renderNote();
@@ -1229,7 +1483,7 @@ class SudokuEngine {
   // =========================================================================
   const kissBtn = document.getElementById('kissBtn');
   const kissCountEl = document.getElementById('kissCount');
-  const cloudKey = CFG.cloudCounterKey || 'lav_love_kisses_app_v2';
+  const cloudKey = CFG.cloudCounterKey || 'lav_love_kisses_shared_live';
   const apiBase = 'https://countapi.mileshilliard.com/api/v1';
 
   let kissCount = parseInt(localStorage.getItem('pendingKisses') || '0', 10);
@@ -1331,7 +1585,7 @@ class SudokuEngine {
     });
   }
 
-  // Secret reset trigger: Triple tap on "letter in progress" header title
+  // Secret reset trigger: Triple tap on "letter in progress" header title (Direct reset, no dialog)
   let titleTaps = 0;
   let titleTapTimer = null;
   if (noteTitleEl) {
@@ -1340,9 +1594,7 @@ class SudokuEngine {
       clearTimeout(titleTapTimer);
       if (titleTaps >= 3) {
         titleTaps = 0;
-        if (confirm("Secret Reset: Reset pending kisses count to 0?")) {
-          resetKisses();
-        }
+        resetKisses();
       } else {
         titleTapTimer = setTimeout(() => { titleTaps = 0; }, 800);
       }
@@ -1363,12 +1615,23 @@ class SudokuEngine {
     return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
+  // Initial load: restore saved state (if any)
+  loadGameState();
+
   // Initial render
   initHeartsBg();
   renderDots();
   renderNote();
   renderDiary();
   renderBoard();
+
+  if (levelCompleted.every(Boolean)) {
+    const mainLayout = document.getElementById('mainLayout');
+    if (mainLayout) mainLayout.style.display = 'none';
+    document.getElementById('noteCard').style.display = 'none';
+    finaleScreen.classList.add('show');
+    finaleContent.innerHTML = `"${PHRASES.join(' — ')}"<br><br>${escapeHtml(CFG.finaleMessage)}`;
+  }
 })();
 </script>
 </body>
