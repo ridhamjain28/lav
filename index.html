@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>for you ♥</title>
+<title>for you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Caveat:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -59,6 +59,9 @@
     animation-name: floatHeart;
     animation-timing-function: ease-in-out;
     animation-iteration-count: infinite;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   .bg-heart.gold { color: var(--gold); }
   @keyframes floatHeart {
@@ -212,8 +215,11 @@
   }
 
   .yay-hearts {
-    font-size: 32px;
-    margin-bottom: 6px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
     animation: pulseKiss 1.2s infinite ease-in-out;
   }
 
@@ -375,7 +381,7 @@
   .kiss-btn {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
     background: rgba(229, 135, 173, 0.15);
     border: 1px solid rgba(229, 135, 173, 0.4);
     padding: 6px 12px;
@@ -398,7 +404,8 @@
     transform: scale(0.95);
   }
   .kiss-icon {
-    font-size: 13px;
+    display: flex;
+    align-items: center;
     animation: pulseKiss 2s infinite ease-in-out;
   }
   @keyframes pulseKiss {
@@ -409,18 +416,22 @@
     position: fixed;
     pointer-events: none;
     z-index: 100;
-    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     animation: floatKiss 1.8s ease-out forwards;
   }
   @keyframes floatKiss {
     0% { transform: translateY(0) scale(0.8) rotate(0deg); opacity: 1; }
-    100% { transform: translateY(-70px) scale(1.5) rotate(15deg); opacity: 0; }
+    100% { transform: translateY(-70px) scale(1.4) rotate(15deg); opacity: 0; }
   }
 
   .level-dots {
     display: flex;
     gap: 6px;
     align-items: center;
+    flex-wrap: wrap;
+    max-width: 240px;
   }
   .dot {
     width: 8px;
@@ -449,54 +460,63 @@
     letter-spacing: 0.15em;
     text-transform: uppercase;
     color: var(--muted);
-    margin-bottom: 6px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    user-select: none;
   }
   .note-card .text {
     font-family: 'Caveat', cursive;
     font-size: 26px;
     color: var(--gold);
-    min-height: 32px;
     line-height: 1.3;
+    min-height: 34px;
     transition: all 0.3s ease;
   }
-  .note-card .text .solved-part { color: var(--gold); }
-  .note-card .text .locked-part { color: var(--muted); opacity: 0.4; letter-spacing: 2px; }
+  .note-card .text .solved-part { color: var(--gold); font-weight: 600; }
+  .note-card .text .locked-part { opacity: 0.35; color: var(--muted); font-size: 20px; }
 
-  /* sudoku grid */
+  /* board */
   .board {
+    width: 100%;
+    max-width: 420px;
+    aspect-ratio: 1;
     display: grid;
     grid-template-columns: repeat(9, 1fr);
-    width: 100%;
-    aspect-ratio: 1/1;
-    background: var(--line);
-    gap: 1px;
-    border: 2px solid var(--gold-soft);
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.4);
-    margin-bottom: 18px;
-  }
-  .cell {
+    grid-template-rows: repeat(9, 1fr);
     background: var(--panel);
+    border: 2px solid var(--gold-soft);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.5), inset 0 0 20px rgba(0,0,0,0.4);
+    touch-action: manipulation;
+  }
+
+  .cell {
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: 'JetBrains Mono', monospace;
-    font-size: clamp(16px, 4.5vw, 20px);
+    font-size: clamp(17px, 4.6vw, 24px);
+    font-weight: 500;
     color: var(--cream);
     cursor: pointer;
     user-select: none;
-    transition: background 0.15s ease;
-    position: relative;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    transition: background 0.15s, color 0.15s, transform 0.1s;
+    background: transparent;
   }
+  .cell:nth-child(9n) { border-right: none; }
+  .cell:nth-last-child(-n+9) { border-bottom: none; }
+
   .cell.given {
-    color: var(--muted);
-    font-weight: 500;
-    background: rgba(40, 23, 48, 0.85);
+    color: var(--gold);
+    font-weight: 600;
   }
   .cell.selected {
-    background: rgba(229, 135, 173, 0.25) !important;
-    box-shadow: inset 0 0 0 2px var(--rose);
+    background: rgba(229, 135, 173, 0.3) !important;
+    box-shadow: inset 0 0 0 1.5px var(--rose);
   }
   .cell.highlight-same {
     background: rgba(223, 178, 119, 0.15);
@@ -518,7 +538,7 @@
     pointer-events: none;
     left: -9999px;
     top: -9999px;
-    font-size: 16px; /* Prevents auto-zoom in iOS Safari */
+    font-size: 16px;
     width: 1px;
     height: 1px;
   }
@@ -526,15 +546,20 @@
   /* actions */
   .controls {
     display: flex;
-    gap: 12px;
+    gap: 8px;
     width: 100%;
   }
   .btn {
     flex: 1;
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 0.08em;
-    padding: 13px;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    padding: 12px 6px;
     border-radius: 10px;
     border: 1px solid var(--gold-soft);
     background: rgba(40, 23, 48, 0.6);
@@ -542,6 +567,7 @@
     cursor: pointer;
     transition: all 0.2s ease;
     text-transform: uppercase;
+    white-space: nowrap;
   }
   .btn:hover { background: var(--gold); color: var(--bg); }
   .btn.primary {
@@ -608,13 +634,16 @@
 
   @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
-  /* floating hearts particles on completion */
+  /* floating SVG heart particles on completion */
   .heart-particle {
     position: fixed;
     pointer-events: none;
     color: var(--rose);
     animation: floatUp 3.5s ease-out forwards;
     z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   @keyframes floatUp {
     0% { transform: translateY(0) scale(0.8); opacity: 1; }
@@ -639,7 +668,9 @@
   <div class="top-bar">
     <div class="level-dots" id="dots"></div>
     <button class="kiss-btn" id="kissBtn" aria-label="Pending kisses counter">
-      <span class="kiss-icon">💋</span>
+      <span class="kiss-icon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      </span>
       <span id="kissCount">0</span>
       <span>kisses</span>
     </button>
@@ -680,8 +711,18 @@
 
       <!-- Controls -->
       <div class="controls">
-        <button class="btn" id="clearBtn">clear</button>
-        <button class="btn primary" id="checkBtn">unlock line ♥</button>
+        <button class="btn" id="clearBtn" title="Clear current puzzle inputs">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+          clear
+        </button>
+        <button class="btn" id="saveBtn" title="Save your game progress safely">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          save
+        </button>
+        <button class="btn primary" id="checkBtn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          unlock line
+        </button>
       </div>
 
       <div class="status-text" id="statusText"></div>
@@ -699,8 +740,12 @@
   <!-- Hearty "yayyyyy" Celebration Overlay -->
   <div class="yay-overlay" id="yayOverlay">
     <div class="yay-popup">
-      <div class="yay-hearts">💖 ✨ 💕</div>
-      <div class="yay-text">yayyyyy! ♥</div>
+      <div class="yay-hearts">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="var(--rose)" stroke="none" style="filter: drop-shadow(0 0 8px rgba(229,135,173,0.6));"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="var(--gold)" stroke="none" style="filter: drop-shadow(0 0 8px rgba(223,178,119,0.6));"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="var(--rose)" stroke="none" style="filter: drop-shadow(0 0 8px rgba(229,135,173,0.6));"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      </div>
+      <div class="yay-text">yayyyyy!</div>
       <div class="yay-sub">level cleared</div>
     </div>
   </div>
@@ -710,17 +755,20 @@
     <span class="eyebrow">every piece solved</span>
     <h2>you found every hidden word</h2>
     <div class="note-content" id="finaleContent"></div>
-    <div class="sign" id="finaleSign">— forever & always ♥</div>
+    <div class="sign" id="finaleSign">— forever & always</div>
   </div>
 
 </div>
 
 <script>
 // =========================================================================
-// 💌 CUSTOMIZE YOUR MESSAGES & CONFIGURATION HERE
+// CUSTOMIZE YOUR MESSAGES & CONFIGURATION HERE
 // =========================================================================
 window.LOVE_CONFIG = {
-  // Each item here represents a puzzle level phrase:
+  // Baseline initial starting checkpoint (0-indexed: 4 means Levels 1-4 are completed, starts on Level 5)
+  defaultUnlockedLevel: 4,
+
+  // Each item here represents a default puzzle level phrase:
   phrases: [
     "Hi sweetaa",
     "How are you",
@@ -731,7 +779,7 @@ window.LOVE_CONFIG = {
   ],
 
   // Grand finale message displayed when all puzzles are solved:
-  finaleMessage: "Every moment with you is my favorite puzzle solved. I love you endlessly ♥",
+  finaleMessage: "Every moment with you is my favorite puzzle solved. I love you endlessly",
 
   // Audio playlist files (place in project folder):
   songFiles: [
@@ -746,8 +794,11 @@ window.LOVE_CONFIG = {
   // Permanent global cloud counter key (synced across all devices & users):
   cloudCounterKey: "lav_love_kisses_shared_live",
 
-  // Secret reset key for resetting the counter programmatically
-  secretResetKey: "sweetaa"
+  // Zero-account cloud key for phrase sync and progress persistence:
+  cloudSyncKey: "lav_love_cloud_sync_v2",
+
+  // Secret reset key / admin PIN for hidden admin studio
+  adminPin: "sweetaa"
 };
 
 // =========================================================================
@@ -965,7 +1016,6 @@ class SudokuEngine {
   }
 
   static isSudokuSolved(grid, originalPuzzle) {
-    // 1. Check all cells are filled with valid numbers 1-9 and original given clues are preserved
     for (let r = 0; r < 9; r++) {
       for (let c = 0; c < 9; c++) {
         const val = grid[r][c];
@@ -976,32 +1026,23 @@ class SudokuEngine {
       }
     }
 
-    // 2. Check each row contains numbers 1-9 with no duplicates
     for (let r = 0; r < 9; r++) {
       const seen = new Set();
-      for (let c = 0; c < 9; c++) {
-        seen.add(grid[r][c]);
-      }
+      for (let c = 0; c < 9; c++) seen.add(grid[r][c]);
       if (seen.size !== 9) return false;
     }
 
-    // 3. Check each column contains numbers 1-9 with no duplicates
     for (let c = 0; c < 9; c++) {
       const seen = new Set();
-      for (let r = 0; r < 9; r++) {
-        seen.add(grid[r][c]);
-      }
+      for (let r = 0; r < 9; r++) seen.add(grid[r][c]);
       if (seen.size !== 9) return false;
     }
 
-    // 4. Check each 3x3 box contains numbers 1-9 with no duplicates
     for (let br = 0; br < 9; br += 3) {
       for (let bc = 0; bc < 9; bc += 3) {
         const seen = new Set();
         for (let r = br; r < br + 3; r++) {
-          for (let c = bc; c < bc + 3; c++) {
-            seen.add(grid[r][c]);
-          }
+          for (let c = bc; c < bc + 3; c++) seen.add(grid[r][c]);
         }
         if (seen.size !== 9) return false;
       }
@@ -1012,37 +1053,86 @@ class SudokuEngine {
 }
 
 // =========================================================================
+// ZERO-ACCOUNT CLOUD SYNC HELPER (kvdb.io REST KV)
+// =========================================================================
+const CloudSync = {
+  bucketKey: (window.LOVE_CONFIG && window.LOVE_CONFIG.cloudSyncKey) || 'lav_love_cloud_sync_v2',
+  apiBase: 'https://kvdb.io',
+
+  async get(key) {
+    try {
+      const res = await fetch(`${this.apiBase}/${this.bucketKey}/${key}`, {
+        cache: 'no-store'
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (e) {
+      return null;
+    }
+  },
+
+  async set(key, value) {
+    try {
+      const res = await fetch(`${this.apiBase}/${this.bucketKey}/${key}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(value)
+      });
+      return res.ok;
+    } catch (e) {
+      return false;
+    }
+  }
+};
+
+// =========================================================================
 // GAME CONTROLLER
 // =========================================================================
 (function() {
   const CFG = window.LOVE_CONFIG;
-  const PHRASES = CFG.phrases;
-  const N = PHRASES.length;
+  let levels = PRESET_LEVELS.map(lvl => ({
+    phrase: lvl.phrase,
+    puzzle: lvl.puzzle.map(row => row.slice()),
+    solution: lvl.solution.map(row => row.slice())
+  }));
 
-  // Use preset levels for matching solutions.md, or generate dynamically for extra levels
-  const levels = PHRASES.map((phrase, idx) => {
-    if (PRESET_LEVELS[idx] && PRESET_LEVELS[idx].phrase === phrase) {
-      return {
-        phrase: PRESET_LEVELS[idx].phrase,
-        puzzle: PRESET_LEVELS[idx].puzzle.map(row => row.slice()),
-        solution: PRESET_LEVELS[idx].solution.map(row => row.slice())
-      };
-    }
-    const { puzzle, solution } = SudokuEngine.generate(34);
-    return { phrase, puzzle, solution };
-  });
+  const DEFAULT_CHECKPOINT = typeof CFG.defaultUnlockedLevel === 'number' ? CFG.defaultUnlockedLevel : 4;
+  let currentLevel = DEFAULT_CHECKPOINT;
+  let N = levels.length;
 
-  let currentLevel = 0;
-  const userGrids = levels.map(lvl => lvl.puzzle.map(row => row.slice()));
-  const levelCompleted = new Array(N).fill(false);
+  let userGrids = levels.map(lvl => lvl.puzzle.map(row => row.slice()));
+  let levelCompleted = new Array(N).fill(false);
+
+  // Pre-fill initial checkpoint (levels 0..DEFAULT_CHECKPOINT-1 completed with solutions)
+  for (let i = 0; i < DEFAULT_CHECKPOINT && i < N; i++) {
+    levelCompleted[i] = true;
+    userGrids[i] = levels[i].solution.map(row => row.slice());
+  }
+
   let selected = { r: 0, c: 0 };
-  let currentSongIndex = 0; // declared here so loadGameState can restore it before music init
+  let currentSongIndex = 0;
   let isSeeking = false;
 
-  // =========================================================================
-  // 💾 LOCALSTORAGE AUTOSAVE (Google Forms-like persistence)
-  // =========================================================================
-  const GAME_STORAGE_KEY = 'lav_sudoku_game_state_v1';
+  const GAME_STORAGE_KEY = 'lav_sudoku_game_state_v2';
+
+  // DOM Elements
+  const dotsEl = document.getElementById('dots');
+  const noteTextEl = document.getElementById('noteText');
+  const noteTitleEl = document.getElementById('noteTitle');
+  const boardEl = document.getElementById('board');
+  const clearBtn = document.getElementById('clearBtn');
+  const saveBtn = document.getElementById('saveBtn');
+  const checkBtn = document.getElementById('checkBtn');
+  const statusText = document.getElementById('statusText');
+  const nativeInput = document.getElementById('nativeInput');
+  const diaryContentEl = document.getElementById('diaryContent');
+  const yayOverlay = document.getElementById('yayOverlay');
+  const finaleScreen = document.getElementById('finaleScreen');
+  const finaleContent = document.getElementById('finaleContent');
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
 
   function saveGameState() {
     try {
@@ -1050,48 +1140,67 @@ class SudokuEngine {
         currentLevel,
         levelCompleted,
         userGrids,
-        currentSongIndex
+        currentSongIndex,
+        timestamp: new Date().toISOString()
       };
       localStorage.setItem(GAME_STORAGE_KEY, JSON.stringify(data));
+      // Silent async push to cloud
+      CloudSync.set('player_progress', data).catch(() => {});
     } catch (e) {
       console.warn("Autosave state error:", e);
     }
   }
 
-  function loadGameState() {
+  function loadGameState(cloudData = null) {
     try {
       const raw = localStorage.getItem(GAME_STORAGE_KEY);
-      if (!raw) return false;
-      const data = JSON.parse(raw);
-      if (data && Array.isArray(data.userGrids)) {
-        for (let i = 0; i < N && i < data.userGrids.length; i++) {
-          if (Array.isArray(data.userGrids[i])) {
-            for (let r = 0; r < 9; r++) {
-              for (let c = 0; c < 9; c++) {
-                const given = levels[i].puzzle[r][c];
-                if (given !== 0) {
-                  userGrids[i][r][c] = given;
-                } else if (typeof data.userGrids[i][r][c] === 'number') {
-                  userGrids[i][r][c] = data.userGrids[i][r][c];
+      let data = raw ? JSON.parse(raw) : null;
+
+      // Prefer newer or higher level progress from cloud if available
+      if (cloudData && typeof cloudData.currentLevel === 'number') {
+        if (!data || cloudData.currentLevel >= data.currentLevel) {
+          data = cloudData;
+        }
+      }
+
+      if (data) {
+        if (typeof data.currentLevel === 'number') {
+          currentLevel = Math.max(DEFAULT_CHECKPOINT, data.currentLevel);
+        }
+
+        if (Array.isArray(data.levelCompleted)) {
+          for (let i = 0; i < N && i < data.levelCompleted.length; i++) {
+            if (i < DEFAULT_CHECKPOINT) {
+              levelCompleted[i] = true;
+            } else {
+              levelCompleted[i] = Boolean(data.levelCompleted[i]);
+            }
+          }
+        }
+
+        if (Array.isArray(data.userGrids)) {
+          for (let i = 0; i < N && i < data.userGrids.length; i++) {
+            if (i < DEFAULT_CHECKPOINT) {
+              userGrids[i] = levels[i].solution.map(row => row.slice());
+            } else if (Array.isArray(data.userGrids[i])) {
+              for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                  const given = levels[i].puzzle[r][c];
+                  if (given !== 0) {
+                    userGrids[i][r][c] = given;
+                  } else if (typeof data.userGrids[i][r][c] === 'number') {
+                    userGrids[i][r][c] = data.userGrids[i][r][c];
+                  }
                 }
               }
             }
           }
         }
-        if (Array.isArray(data.levelCompleted)) {
-          for (let i = 0; i < N && i < data.levelCompleted.length; i++) {
-            levelCompleted[i] = Boolean(data.levelCompleted[i]);
-          }
-        }
-        if (typeof data.currentLevel === 'number' && data.currentLevel >= 0 && data.currentLevel < N) {
-          currentLevel = data.currentLevel;
-        }
-        // If the saved currentLevel is already completed (e.g. page was closed
-        // during the 1.4s transition timeout), advance to the next incomplete level.
+
         while (currentLevel < N - 1 && levelCompleted[currentLevel]) {
           currentLevel++;
         }
-        // Restore song index
+
         if (typeof data.currentSongIndex === 'number') {
           currentSongIndex = data.currentSongIndex;
         }
@@ -1101,26 +1210,6 @@ class SudokuEngine {
       console.warn("Load state error:", e);
     }
     return false;
-  }
-
-  // DOM Elements
-  const dotsEl = document.getElementById('dots');
-  const noteTextEl = document.getElementById('noteText');
-  const noteTitleEl = document.getElementById('noteTitle');
-  const boardEl = document.getElementById('board');
-  const clearBtn = document.getElementById('clearBtn');
-  const checkBtn = document.getElementById('checkBtn');
-  const statusText = document.getElementById('statusText');
-  const nativeInput = document.getElementById('nativeInput');
-  const gameSection = document.getElementById('gameSection');
-  const diaryCard = document.getElementById('diaryCard');
-  const diaryContentEl = document.getElementById('diaryContent');
-  const yayOverlay = document.getElementById('yayOverlay');
-  const finaleScreen = document.getElementById('finaleScreen');
-  const finaleContent = document.getElementById('finaleContent');
-
-  function escapeHtml(s) {
-    return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
   function renderDiary(latestUnlockedIdx = -1) {
@@ -1133,13 +1222,12 @@ class SudokuEngine {
         if (i === latestUnlockedIdx) {
           entry.className = 'diary-entry unlocked';
         } else if (isInitialRestore) {
-          // Stagger-in animation for restored completed entries on page load
           entry.className = 'diary-entry stagger-in';
-          entry.style.setProperty('--stagger-delay', `${i * 80}ms`);
+          entry.style.setProperty('--stagger-delay', `${i * 70}ms`);
         } else {
           entry.className = 'diary-entry';
         }
-        entry.textContent = PHRASES[i];
+        entry.textContent = levels[i].phrase;
       } else {
         entry.className = 'diary-entry empty';
         entry.textContent = '· · · · · · · · · ·';
@@ -1158,7 +1246,7 @@ class SudokuEngine {
   }
 
   // =========================================================================
-  // 🎵 FULL MUSIC PLAYER (Playlist, Seekbar, Prev/Next, Play/Pause)
+  // MUSIC PLAYER
   // =========================================================================
   const bgAudio = document.getElementById('bgAudio');
   const playPauseBtn = document.getElementById('playPauseBtn');
@@ -1170,7 +1258,7 @@ class SudokuEngine {
   const currentTimeEl = document.getElementById('currentTime');
   const durationTimeEl = document.getElementById('durationTime');
 
-  const songPlaylist = (CFG.songFiles && CFG.songFiles.length) ? CFG.songFiles : (CFG.songFile ? [CFG.songFile] : ['song.mp3', 'song2.mp3', 'song3.mp3']);
+  const songPlaylist = (CFG.songFiles && CFG.songFiles.length) ? CFG.songFiles : ['song.mp3', 'song2.mp3', 'song3.mp3'];
 
   function formatTime(seconds) {
     if (isNaN(seconds) || !isFinite(seconds) || seconds < 0) return '0:00';
@@ -1185,7 +1273,7 @@ class SudokuEngine {
     if (seekBar) seekBar.value = 0;
     if (currentTimeEl) currentTimeEl.textContent = '0:00';
     if (autoPlay) {
-      bgAudio.play().catch(e => console.log("Playback gesture needed:", e));
+      bgAudio.play().catch(() => {});
     }
   }
 
@@ -1194,7 +1282,7 @@ class SudokuEngine {
       if (!bgAudio.src || bgAudio.src === '' || bgAudio.src.endsWith('/')) {
         loadSong(currentSongIndex, true);
       } else {
-        bgAudio.play().catch(e => console.log("Play error:", e));
+        bgAudio.play().catch(() => {});
       }
     } else {
       bgAudio.pause();
@@ -1230,7 +1318,6 @@ class SudokuEngine {
     if (durationTimeEl) durationTimeEl.textContent = formatTime(bgAudio.duration);
   });
 
-  // Automatically advance to the next song when finished
   bgAudio.addEventListener('ended', () => {
     loadSong(currentSongIndex + 1, true);
   });
@@ -1254,10 +1341,8 @@ class SudokuEngine {
     });
   }
 
-  // Preload the last-played song (index restored from localStorage, or 0 on first visit)
   bgAudio.src = songPlaylist[currentSongIndex % songPlaylist.length];
 
-  // Auto-start music on first interaction
   document.addEventListener('click', function onFirstClick() {
     if (bgAudio.paused) {
       bgAudio.play().catch(() => {});
@@ -1265,7 +1350,6 @@ class SudokuEngine {
     document.removeEventListener('click', onFirstClick);
   }, { once: true });
 
-  // Native input focus for mobile keypads
   function triggerNativeInput() {
     nativeInput.value = '';
     nativeInput.focus();
@@ -1275,7 +1359,6 @@ class SudokuEngine {
     const val = e.target.value.replace(/[^1-9]/g, '');
     if (val) setCellVal(parseInt(val.slice(-1), 10));
     nativeInput.value = '';
-    // Dismiss mobile keyboard after each number entry
     nativeInput.blur();
   });
 
@@ -1283,7 +1366,6 @@ class SudokuEngine {
     if (e.key === 'Backspace' || e.key === 'Delete') setCellVal(0);
   });
 
-  // Physical PC Keyboard Listener
   document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowUp') { e.preventDefault(); moveSel(-1, 0); }
     else if (e.key === 'ArrowDown') { e.preventDefault(); moveSel(1, 0); }
@@ -1362,7 +1444,7 @@ class SudokuEngine {
     const parts = [];
     for (let i = 0; i < N; i++) {
       if (levelCompleted[i]) {
-        parts.push(`<span class="solved-part">${escapeHtml(PHRASES[i])}</span>`);
+        parts.push(`<span class="solved-part">${escapeHtml(levels[i].phrase)}</span>`);
       } else if (i === currentLevel) {
         parts.push(`<span class="locked-part">· · ·</span>`);
       }
@@ -1413,13 +1495,19 @@ class SudokuEngine {
   }
 
   clearBtn.addEventListener('click', () => {
-    // Resets the in-memory grid only — does NOT write to localStorage.
-    // If the user accidentally clears and then refreshes, the last autosaved
-    // numbers (from their last keypress) will be restored. Only a refresh
-    // AFTER clear followed by new entries will overwrite the save.
     userGrids[currentLevel] = levels[currentLevel].puzzle.map(row => row.slice());
     statusText.textContent = '';
     renderBoard();
+  });
+
+  saveBtn.addEventListener('click', () => {
+    saveGameState();
+    spawnHearts(12);
+    statusText.textContent = 'progress saved safely';
+    statusText.className = 'status-text ok';
+    setTimeout(() => {
+      if (statusText.textContent === 'progress saved safely') statusText.textContent = '';
+    }, 3000);
   });
 
   checkBtn.addEventListener('click', () => {
@@ -1428,7 +1516,7 @@ class SudokuEngine {
     const filled = grid.every(row => row.every(v => v !== 0));
 
     if (!filled) {
-      statusText.textContent = 'a few boxes are still waiting ♥';
+      statusText.textContent = 'a few boxes are still waiting';
       statusText.className = 'status-text bad';
       return;
     }
@@ -1442,7 +1530,7 @@ class SudokuEngine {
     }
 
     if (!SudokuEngine.isSudokuSolved(grid, lvl.puzzle)) {
-      statusText.textContent = 'almost there, check your steps ♥';
+      statusText.textContent = 'almost there, check your steps';
       statusText.className = 'status-text bad';
       return;
     }
@@ -1474,7 +1562,8 @@ class SudokuEngine {
         if (mainLayout) mainLayout.style.display = 'none';
         document.getElementById('noteCard').style.display = 'none';
         finaleScreen.classList.add('show');
-        finaleContent.innerHTML = `"${PHRASES.join(' — ')}"<br><br>${escapeHtml(CFG.finaleMessage)}`;
+        const phrasesList = levels.map(l => l.phrase);
+        finaleContent.innerHTML = `"${phrasesList.join(' — ')}"<br><br>${escapeHtml(CFG.finaleMessage)}`;
         spawnHearts(30);
       }, 1200);
     }
@@ -1483,14 +1572,18 @@ class SudokuEngine {
   function spawnHearts(count = 10) {
     for (let i = 0; i < count; i++) {
       setTimeout(() => {
-        const heart = document.createElement('div');
-        heart.className = 'heart-particle';
-        heart.textContent = ['♥', '♡', '💖', '✨'][Math.floor(Math.random() * 4)];
-        heart.style.left = (15 + Math.random() * 70) + 'vw';
-        heart.style.bottom = (20 + Math.random() * 40) + 'vh';
-        heart.style.fontSize = (16 + Math.random() * 18) + 'px';
-        document.body.appendChild(heart);
-        setTimeout(() => heart.remove(), 3500);
+        const particle = document.createElement('div');
+        particle.className = 'heart-particle';
+        const isGold = Math.random() < 0.35;
+        const color = isGold ? 'var(--gold)' : 'var(--rose)';
+        const isStar = Math.random() < 0.3;
+        particle.innerHTML = isStar ? 
+          `<svg width="18" height="18" viewBox="0 0 24 24" fill="${color}" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>` :
+          `<svg width="18" height="18" viewBox="0 0 24 24" fill="${color}" stroke="none"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`;
+        particle.style.left = (15 + Math.random() * 70) + 'vw';
+        particle.style.bottom = (20 + Math.random() * 40) + 'vh';
+        document.body.appendChild(particle);
+        setTimeout(() => particle.remove(), 3500);
       }, i * 150);
     }
   }
@@ -1498,16 +1591,16 @@ class SudokuEngine {
   function initHeartsBg() {
     const container = document.getElementById('heartsBg');
     if (!container) return;
-    const glyphs = ['♥', '♡'];
     const count = window.innerWidth < 600 ? 24 : 38;
     for (let i = 0; i < count; i++) {
       const h = document.createElement('div');
-      h.className = 'bg-heart' + (Math.random() < 0.3 ? ' gold' : '');
-      h.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
+      const isGold = Math.random() < 0.3;
+      h.className = 'bg-heart' + (isGold ? ' gold' : '');
+      const size = 12 + Math.random() * 18;
+      const color = isGold ? 'var(--gold)' : 'var(--rose)';
+      h.innerHTML = `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`;
       h.style.left = Math.random() * 100 + 'vw';
       h.style.top = Math.random() * 100 + 'vh';
-      const size = 12 + Math.random() * 20;
-      h.style.fontSize = size + 'px';
       h.style.animationDuration = (5 + Math.random() * 6) + 's';
       h.style.animationDelay = (Math.random() * 5) + 's';
       container.appendChild(h);
@@ -1515,11 +1608,11 @@ class SudokuEngine {
   }
 
   // =========================================================================
-  // 💋 PENDING KISSES COUNTER & EXTERNAL PING SYSTEM (LIVE)
+  // KISSES COUNTER & EXTERNAL PING SYSTEM
   // =========================================================================
   const kissBtn = document.getElementById('kissBtn');
   const kissCountEl = document.getElementById('kissCount');
-  const cloudKey = CFG.cloudCounterKey || 'lav_love_kisses_shared_live';
+  const cloudCounterKey = CFG.cloudCounterKey || 'lav_love_kisses_shared_live';
   const apiBase = 'https://countapi.mileshilliard.com/api/v1';
 
   let kissCount = parseInt(localStorage.getItem('pendingKisses') || '0', 10);
@@ -1535,13 +1628,11 @@ class SudokuEngine {
     }
   }
 
-  // Fetch live count from cloud counter
   function fetchLiveCount() {
-    fetch(`${apiBase}/get/${cloudKey}`)
+    fetch(`${apiBase}/get/${cloudCounterKey}`)
       .then(r => r.json())
       .then(data => {
         if (data && typeof data.value === 'number') {
-          // Sync with highest counter value
           const synced = Math.max(kissCount, data.value);
           updateKissUI(synced);
         }
@@ -1549,11 +1640,9 @@ class SudokuEngine {
       .catch(() => {});
   }
 
-  // Initial fetch and live polling every 3.5 seconds
   fetchLiveCount();
   setInterval(fetchLiveCount, 3500);
 
-  // Sync across tabs immediately
   window.addEventListener('storage', (e) => {
     if (e.key === 'pendingKisses') {
       const val = parseInt(e.newValue || '0', 10);
@@ -1566,8 +1655,10 @@ class SudokuEngine {
     const rect = kissBtn.getBoundingClientRect();
     const particle = document.createElement('div');
     particle.className = 'kiss-particle';
-    particle.textContent = ['💋', '💖', '😘', '✨'][Math.floor(Math.random() * 4)];
-    particle.style.left = (rect.left + rect.width / 2 - 10) + 'px';
+    const isGold = Math.random() < 0.3;
+    const color = isGold ? 'var(--gold)' : 'var(--rose)';
+    particle.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="${color}" style="filter: drop-shadow(0 0 6px ${color});"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`;
+    particle.style.left = (rect.left + rect.width / 2 - 11) + 'px';
     particle.style.top = (rect.top - 10) + 'px';
     document.body.appendChild(particle);
     setTimeout(() => particle.remove(), 1800);
@@ -1579,8 +1670,7 @@ class SudokuEngine {
 
     if (!silent) spawnKissParticle();
 
-    // Increment count on cloud server
-    fetch(`${apiBase}/hit/${cloudKey}`)
+    fetch(`${apiBase}/hit/${cloudCounterKey}`)
       .then(r => r.json())
       .then(data => {
         if (data && typeof data.value === 'number') {
@@ -1589,7 +1679,6 @@ class SudokuEngine {
       })
       .catch(() => {});
 
-    // Webhook ping if configured
     if (CFG.kissWebhookUrl) {
       fetch(CFG.kissWebhookUrl, {
         method: 'POST',
@@ -1603,10 +1692,9 @@ class SudokuEngine {
 
   function resetKisses() {
     updateKissUI(0);
-    // Reset on cloud counter API
-    fetch(`${apiBase}/set/${cloudKey}?value=0`).catch(() => {});
+    fetch(`${apiBase}/set/${cloudCounterKey}?value=0`).catch(() => {});
     localStorage.setItem('pendingKisses', '0');
-    statusText.textContent = 'pending kisses reset to 0 ♥';
+    statusText.textContent = 'pending kisses reset to 0';
     statusText.className = 'status-text ok';
     setTimeout(() => { if (statusText.textContent.includes('reset')) statusText.textContent = ''; }, 3000);
   }
@@ -1621,7 +1709,6 @@ class SudokuEngine {
     });
   }
 
-  // Secret reset trigger: Triple tap on "letter in progress" header title (Direct reset, no dialog)
   let titleTaps = 0;
   let titleTapTimer = null;
   if (noteTitleEl) {
@@ -1637,7 +1724,6 @@ class SudokuEngine {
     });
   }
 
-  // Inbound URL parameter handlers:
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.has('kiss') || urlParams.has('addKiss') || urlParams.has('add_kiss')) {
     const amt = parseInt(urlParams.get('kiss') || urlParams.get('addKiss') || urlParams.get('add_kiss') || '1', 10);
@@ -1647,7 +1733,7 @@ class SudokuEngine {
     resetKisses();
   }
 
-  // Initial load: restore saved state (if any)
+  // Initial load: restore saved state from local storage immediately
   loadGameState();
 
   // Initial render
@@ -1657,21 +1743,71 @@ class SudokuEngine {
   renderDiary();
   renderBoard();
 
+  // Dynamic async cloud hydration: fetch latest phrases & latest progress
+  async function hydrateFromCloud() {
+    try {
+      // 1. Fetch any newly added phrases/levels published from hidden.html
+      const cloudLevels = await CloudSync.get('phrases_and_levels');
+      if (Array.isArray(cloudLevels) && cloudLevels.length > 0) {
+        // Merge with preset levels
+        const merged = PRESET_LEVELS.map(l => ({ ...l }));
+        for (const cl of cloudLevels) {
+          if (!merged.some(m => m.phrase.trim().toLowerCase() === cl.phrase.trim().toLowerCase())) {
+            merged.push({
+              phrase: cl.phrase,
+              puzzle: cl.puzzle.map(r => r.slice()),
+              solution: cl.solution.map(r => r.slice())
+            });
+          }
+        }
+        levels = merged;
+        N = levels.length;
+        
+        // Expand userGrids and levelCompleted if needed
+        while (userGrids.length < N) {
+          userGrids.push(levels[userGrids.length].puzzle.map(r => r.slice()));
+          levelCompleted.push(false);
+        }
+      }
+
+      // 2. Fetch latest player progress
+      const cloudProgress = await CloudSync.get('player_progress');
+      if (cloudProgress) {
+        loadGameState(cloudProgress);
+      }
+
+      // Re-render with synced cloud data
+      renderDots();
+      renderNote();
+      renderDiary();
+      renderBoard();
+
+      if (levelCompleted.every(Boolean)) {
+        const mainLayout = document.getElementById('mainLayout');
+        if (mainLayout) mainLayout.style.display = 'none';
+        document.getElementById('noteCard').style.display = 'none';
+        finaleScreen.classList.add('show');
+        const phrasesList = levels.map(l => l.phrase);
+        finaleContent.innerHTML = `"${phrasesList.join(' — ')}"<br><br>${escapeHtml(CFG.finaleMessage)}`;
+      }
+    } catch (e) {
+      console.warn("Cloud hydration note:", e);
+    }
+  }
+
+  hydrateFromCloud();
+
   if (levelCompleted.every(Boolean)) {
     const mainLayout = document.getElementById('mainLayout');
     if (mainLayout) mainLayout.style.display = 'none';
     document.getElementById('noteCard').style.display = 'none';
     finaleScreen.classList.add('show');
-    finaleContent.innerHTML = `"${PHRASES.join(' — ')}"<br><br>${escapeHtml(CFG.finaleMessage)}`;
+    const phrasesList = levels.map(l => l.phrase);
+    finaleContent.innerHTML = `"${phrasesList.join(' — ')}"<br><br>${escapeHtml(CFG.finaleMessage)}`;
   }
 
-  // =========================================================================
-  // 🛡️ ACCIDENTAL REFRESH PROTECTION
-  // Warns if the user is mid-solve and the in-memory grid differs from what's
-  // saved in localStorage (i.e. they used "clear" and haven't re-entered yet).
-  // =========================================================================
   window.addEventListener('beforeunload', (e) => {
-    if (levelCompleted.every(Boolean)) return; // Finale: no warning needed
+    if (levelCompleted.every(Boolean)) return;
     const savedRaw = localStorage.getItem(GAME_STORAGE_KEY);
     let savedGrid = null;
     try {
@@ -1689,7 +1825,7 @@ class SudokuEngine {
     );
     if (hasUnsaved) {
       e.preventDefault();
-      e.returnValue = ''; // Required for Chrome
+      e.returnValue = '';
     }
   });
 })();
