@@ -19,6 +19,7 @@
     --cream: #f8eee9;
     --muted: #a68b9d;
     --danger: #e66b6b;
+    --danger-soft: rgba(230, 107, 107, 0.15);
     --success: #67c29e;
     --border: rgba(223, 178, 119, 0.18);
     --border-subtle: rgba(248, 238, 233, 0.08);
@@ -153,6 +154,8 @@
     margin-bottom: 18px;
     padding-bottom: 12px;
     border-bottom: 1px solid var(--border-subtle);
+    flex-wrap: wrap;
+    gap: 8px;
   }
   .card-title {
     font-family: 'Caveat', cursive;
@@ -215,11 +218,11 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 6px;
     font-family: 'JetBrains Mono', monospace;
     font-size: 12px;
     letter-spacing: 0.06em;
-    padding: 12px 18px;
+    padding: 12px 16px;
     border-radius: 10px;
     border: 1px solid var(--border);
     background: var(--rose-soft);
@@ -255,9 +258,20 @@
     color: var(--bg);
     border-color: var(--gold);
   }
+  .btn.danger {
+    background: var(--danger-soft);
+    color: var(--danger);
+    border-color: rgba(230, 107, 107, 0.35);
+  }
+  .btn.danger:hover {
+    background: var(--danger);
+    color: #fff;
+    border-color: var(--danger);
+  }
   .btn.sm {
-    padding: 6px 12px;
+    padding: 5px 10px;
     font-size: 11px;
+    border-radius: 8px;
   }
 
   /* Table */
@@ -293,6 +307,14 @@
   }
   .table tr:hover td {
     background: var(--card-hover);
+  }
+
+  .actions-cell {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    flex-wrap: nowrap;
   }
 
   .badge {
@@ -393,7 +415,7 @@
     transform: translateY(0);
   }
 
-  /* PIN Auth Modal */
+  /* Modals */
   .modal-overlay {
     position: fixed;
     inset: 0;
@@ -407,12 +429,12 @@
   }
   .modal-box {
     width: 100%;
-    max-width: 360px;
+    max-width: 440px;
     background: var(--card);
     border: 1px solid var(--gold-soft);
     box-shadow: 0 20px 50px rgba(0,0,0,0.7);
     border-radius: 20px;
-    padding: 32px 24px;
+    padding: 30px 24px;
     text-align: center;
   }
 </style>
@@ -436,6 +458,61 @@
   </div>
 </div>
 
+<!-- Edit Phrase Modal -->
+<div class="modal-overlay" id="editModal" style="display: none;">
+  <div class="modal-box" style="text-align: left;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border-subtle);">
+      <h3 style="font-family: 'Caveat', cursive; font-size: 26px; color: var(--gold);" id="editModalTitle">Edit Level</h3>
+      <button class="btn sm secondary" id="closeEditModalBtn">Close</button>
+    </div>
+    
+    <div class="form-group">
+      <label class="label" for="editPhraseInput">Love Phrase</label>
+      <input type="text" id="editPhraseInput" class="input" maxlength="60">
+    </div>
+
+    <div class="form-group" style="margin-top: 14px;">
+      <label class="label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; text-transform: none;">
+        <input type="checkbox" id="editRegenSudokuCheckbox" style="accent-color: var(--rose);">
+        <span>Regenerate Sudoku Puzzle &amp; Solution</span>
+      </label>
+    </div>
+
+    <div class="form-group" id="editCluesGroup" style="display: none;">
+      <label class="label" for="editCluesSelect">Difficulty (Given Clues)</label>
+      <select id="editCluesSelect" class="select">
+        <option value="34" selected>Standard (34 Clues — Casual)</option>
+        <option value="38">Easy (38 Clues — Gentle)</option>
+        <option value="30">Challenging (30 Clues)</option>
+      </select>
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-top: 24px;">
+      <button class="btn secondary" id="cancelEditBtn" style="flex: 1;">Cancel</button>
+      <button class="btn primary" id="saveEditBtn" style="flex: 2;">Save &amp; Update Live</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" id="deleteModal" style="display: none;">
+  <div class="modal-box">
+    <div style="width: 44px; height: 44px; margin: 0 auto 16px; border-radius: 50%; background: var(--danger-soft); border: 1px solid var(--danger); display: flex; align-items: center; justify-content: center; color: var(--danger);">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+    </div>
+    <h3 style="font-family: 'Caveat', cursive; font-size: 28px; color: var(--gold); margin-bottom: 6px;">Delete Level?</h3>
+    <p style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 20px; line-height: 1.5;" id="deleteModalText">
+      Are you sure you want to delete this level? Her live game will adapt to the remaining levels.
+    </p>
+    
+    <div style="display: flex; gap: 10px;">
+      <button class="btn secondary" id="cancelDeleteBtn" style="flex: 1;">Cancel</button>
+      <button class="btn danger" id="confirmDeleteBtn" style="flex: 1;">Delete Level</button>
+    </div>
+  </div>
+</div>
+
+<!-- Main Container -->
 <div class="container" id="mainContent" style="display: none;">
 
   <!-- Header -->
@@ -446,7 +523,7 @@
       </div>
       <div>
         <h1 class="title">Love Note Sudoku Studio</h1>
-        <div class="subtitle">Live phrase generator &amp; player progress checkpoint manager</div>
+        <div class="subtitle">Live phrase creator, editor &amp; player checkpoint manager</div>
       </div>
     </div>
     <div>
@@ -469,7 +546,7 @@
           </h2>
         </div>
         <p class="card-description">
-          Add any romantic phrase. The system automatically creates a unique, solvable Sudoku puzzle and solution, publishing it live to her phone immediately!
+          Add any romantic phrase. The system automatically creates a unique Sudoku puzzle + solution, publishing it live to her phone immediately!
         </p>
 
         <div class="form-group">
@@ -529,20 +606,26 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
             All Game Levels &amp; Records
           </h2>
-          <button class="btn sm secondary" id="exportMarkdownBtn" title="Copy Markdown table for solutions.md">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            Copy solutions.md
-          </button>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn sm secondary" id="restorePresetsBtn" title="Reset back to original 6 presets">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+              Restore Defaults
+            </button>
+            <button class="btn sm secondary" id="exportMarkdownBtn" title="Copy Markdown table for solutions.md">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              Copy solutions.md
+            </button>
+          </div>
         </div>
 
         <div class="table-wrap">
           <table class="table">
             <thead>
               <tr>
-                <th style="width: 50px;">Lvl</th>
+                <th style="width: 45px;">Lvl</th>
                 <th>Phrase</th>
-                <th>Type</th>
-                <th style="text-align: right;">Action</th>
+                <th style="width: 70px;">Type</th>
+                <th style="text-align: right; width: 190px;">Actions</th>
               </tr>
             </thead>
             <tbody id="levelsTableBody"></tbody>
@@ -836,6 +919,8 @@ const CloudSync = {
 // =========================================================================
 let allLevels = PRESET_LEVELS.map((l, idx) => ({ id: idx + 1, ...l, isPreset: true }));
 let selectedLevelIdx = 0;
+let levelToEditIdx = null;
+let levelToDeleteIdx = null;
 let playerProgress = null;
 
 // DOM Elements
@@ -855,11 +940,29 @@ const updateCheckpointBtn = document.getElementById('updateCheckpointBtn');
 
 const levelsTableBody = document.getElementById('levelsTableBody');
 const exportMarkdownBtn = document.getElementById('exportMarkdownBtn');
+const restorePresetsBtn = document.getElementById('restorePresetsBtn');
 
 const inspectorTitle = document.getElementById('inspectorTitle');
 const inspectorPhrase = document.getElementById('inspectorPhrase');
 const inspectorPuzzleGrid = document.getElementById('inspectorPuzzleGrid');
 const inspectorSolutionGrid = document.getElementById('inspectorSolutionGrid');
+
+// Edit Modal Elements
+const editModal = document.getElementById('editModal');
+const editModalTitle = document.getElementById('editModalTitle');
+const editPhraseInput = document.getElementById('editPhraseInput');
+const editRegenSudokuCheckbox = document.getElementById('editRegenSudokuCheckbox');
+const editCluesGroup = document.getElementById('editCluesGroup');
+const editCluesSelect = document.getElementById('editCluesSelect');
+const closeEditModalBtn = document.getElementById('closeEditModalBtn');
+const cancelEditBtn = document.getElementById('cancelEditBtn');
+const saveEditBtn = document.getElementById('saveEditBtn');
+
+// Delete Modal Elements
+const deleteModal = document.getElementById('deleteModal');
+const deleteModalText = document.getElementById('deleteModalText');
+const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
 
 const toast = document.getElementById('toast');
 const toastText = document.getElementById('toastText');
@@ -900,22 +1003,26 @@ async function initStudio() {
   populateCheckpointOptions();
 }
 
+async function saveAllLevelsToCloud() {
+  const payload = allLevels.map(l => ({
+    phrase: l.phrase,
+    puzzle: l.puzzle,
+    solution: l.solution,
+    isPreset: Boolean(l.isPreset)
+  }));
+  return await CloudSync.set('phrases_and_levels', payload);
+}
+
 async function loadLevelsFromCloud() {
   const cloudLevels = await CloudSync.get('phrases_and_levels');
   if (Array.isArray(cloudLevels) && cloudLevels.length > 0) {
-    const merged = PRESET_LEVELS.map((l, idx) => ({ id: idx + 1, ...l, isPreset: true }));
-    cloudLevels.forEach((cl, idx) => {
-      if (!merged.some(m => m.phrase.trim().toLowerCase() === cl.phrase.trim().toLowerCase())) {
-        merged.push({
-          id: merged.length + 1,
-          phrase: cl.phrase,
-          puzzle: cl.puzzle,
-          solution: cl.solution,
-          isPreset: false
-        });
-      }
-    });
-    allLevels = merged;
+    allLevels = cloudLevels.map((cl, idx) => ({
+      id: idx + 1,
+      phrase: cl.phrase,
+      puzzle: cl.puzzle,
+      solution: cl.solution,
+      isPreset: typeof cl.isPreset === 'boolean' ? cl.isPreset : (idx < 6)
+    }));
   }
 }
 
@@ -938,9 +1045,9 @@ function populateCheckpointOptions() {
     checkpointSelect.appendChild(opt);
   });
   if (playerProgress && typeof playerProgress.currentLevel === 'number') {
-    checkpointSelect.value = playerProgress.currentLevel.toString();
+    checkpointSelect.value = Math.min(playerProgress.currentLevel, allLevels.length - 1).toString();
   } else {
-    checkpointSelect.value = '4'; // Level 5
+    checkpointSelect.value = Math.min(4, allLevels.length - 1).toString();
   }
 }
 
@@ -953,17 +1060,35 @@ function renderLevelsTable() {
       <td style="font-family: 'Cormorant Garamond', serif; font-size: 18px;">${lvl.phrase}</td>
       <td><span class="badge ${lvl.isPreset ? 'preset' : 'custom'}">${lvl.isPreset ? 'Preset' : 'Custom'}</span></td>
       <td style="text-align: right;">
-        <button class="btn sm secondary view-btn" data-idx="${idx}">Inspect</button>
+        <div class="actions-cell">
+          <button class="btn sm secondary inspect-btn" data-idx="${idx}" title="Inspect board clues & solution">Inspect</button>
+          <button class="btn sm secondary edit-btn" data-idx="${idx}" title="Edit phrase or regenerate Sudoku">Edit</button>
+          <button class="btn sm danger delete-btn" data-idx="${idx}" title="Delete phrase">Delete</button>
+        </div>
       </td>
     `;
     levelsTableBody.appendChild(tr);
   });
 
-  document.querySelectorAll('.view-btn').forEach(btn => {
+  document.querySelectorAll('.inspect-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const idx = parseInt(e.currentTarget.getAttribute('data-idx'), 10);
       selectedLevelIdx = idx;
       renderInspector(idx);
+    });
+  });
+
+  document.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const idx = parseInt(e.currentTarget.getAttribute('data-idx'), 10);
+      openEditModal(idx);
+    });
+  });
+
+  document.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const idx = parseInt(e.currentTarget.getAttribute('data-idx'), 10);
+      openDeleteModal(idx);
     });
   });
 }
@@ -1010,6 +1135,126 @@ function renderInspector(idx) {
   }
 }
 
+// Edit Modal Handling
+function openEditModal(idx) {
+  levelToEditIdx = idx;
+  const lvl = allLevels[idx];
+  if (!lvl) return;
+
+  editModalTitle.textContent = `Edit Level ${idx + 1}`;
+  editPhraseInput.value = lvl.phrase;
+  editRegenSudokuCheckbox.checked = false;
+  editCluesGroup.style.display = 'none';
+  editModal.style.display = 'flex';
+}
+
+function closeEditModal() {
+  editModal.style.display = 'none';
+  levelToEditIdx = null;
+}
+
+editRegenSudokuCheckbox.addEventListener('change', () => {
+  editCluesGroup.style.display = editRegenSudokuCheckbox.checked ? 'block' : 'none';
+});
+
+closeEditModalBtn.addEventListener('click', closeEditModal);
+cancelEditBtn.addEventListener('click', closeEditModal);
+
+saveEditBtn.addEventListener('click', async () => {
+  if (levelToEditIdx === null || !allLevels[levelToEditIdx]) return;
+
+  const newPhrase = editPhraseInput.value.trim();
+  if (!newPhrase) {
+    alert("Please enter a romantic phrase.");
+    return;
+  }
+
+  saveEditBtn.disabled = true;
+  saveEditBtn.innerHTML = 'Saving Changes...';
+
+  const lvl = allLevels[levelToEditIdx];
+  lvl.phrase = newPhrase;
+
+  if (editRegenSudokuCheckbox.checked) {
+    const clues = parseInt(editCluesSelect.value, 10) || 34;
+    const { puzzle, solution } = SudokuEngine.generate(clues);
+    lvl.puzzle = puzzle;
+    lvl.solution = solution;
+    lvl.isPreset = false;
+  }
+
+  await saveAllLevelsToCloud();
+
+  saveEditBtn.disabled = false;
+  saveEditBtn.innerHTML = 'Save &amp; Update Live';
+  closeEditModal();
+
+  renderLevelsTable();
+  renderInspector(selectedLevelIdx);
+  populateCheckpointOptions();
+  showToast(`Level ${levelToEditIdx + 1} updated live!`);
+});
+
+// Delete Modal Handling
+function openDeleteModal(idx) {
+  levelToDeleteIdx = idx;
+  const lvl = allLevels[idx];
+  if (!lvl) return;
+
+  deleteModalText.textContent = `Are you sure you want to delete Level ${idx + 1} ("${lvl.phrase}")? The website and player progress will adapt automatically.`;
+  deleteModal.style.display = 'flex';
+}
+
+function closeDeleteModal() {
+  deleteModal.style.display = 'none';
+  levelToDeleteIdx = null;
+}
+
+cancelDeleteBtn.addEventListener('click', closeDeleteModal);
+
+confirmDeleteBtn.addEventListener('click', async () => {
+  if (levelToDeleteIdx === null || !allLevels[levelToDeleteIdx]) return;
+
+  if (allLevels.length <= 1) {
+    alert("You must have at least 1 level in the game!");
+    closeDeleteModal();
+    return;
+  }
+
+  confirmDeleteBtn.disabled = true;
+  confirmDeleteBtn.innerHTML = 'Deleting...';
+
+  const deletedNum = levelToDeleteIdx + 1;
+  allLevels.splice(levelToDeleteIdx, 1);
+  allLevels.forEach((l, i) => { l.id = i + 1; });
+
+  await saveAllLevelsToCloud();
+
+  confirmDeleteBtn.disabled = false;
+  confirmDeleteBtn.innerHTML = 'Delete Level';
+  closeDeleteModal();
+
+  selectedLevelIdx = Math.max(0, Math.min(selectedLevelIdx, allLevels.length - 1));
+  renderLevelsTable();
+  renderInspector(selectedLevelIdx);
+  populateCheckpointOptions();
+  showToast(`Level ${deletedNum} deleted & cloud updated!`);
+});
+
+// Restore Presets Handling
+restorePresetsBtn.addEventListener('click', async () => {
+  if (!confirm("Are you sure you want to reset all levels back to the original 6 presets?")) return;
+
+  allLevels = PRESET_LEVELS.map((l, idx) => ({ id: idx + 1, ...l, isPreset: true }));
+  await saveAllLevelsToCloud();
+
+  selectedLevelIdx = 0;
+  renderLevelsTable();
+  renderInspector(0);
+  populateCheckpointOptions();
+  showToast("Restored original 6 presets to cloud!");
+});
+
 // Add New Phrase & Publish
 generateAndPublishBtn.addEventListener('click', async () => {
   const phrase = phraseInput.value.trim();
@@ -1034,14 +1279,7 @@ generateAndPublishBtn.addEventListener('click', async () => {
 
   allLevels.push(newLevel);
 
-  // Save to cloud store
-  const customLevelsOnly = allLevels.filter(l => !l.isPreset).map(l => ({
-    phrase: l.phrase,
-    puzzle: l.puzzle,
-    solution: l.solution
-  }));
-
-  const saved = await CloudSync.set('phrases_and_levels', customLevelsOnly);
+  const saved = await saveAllLevelsToCloud();
 
   generateAndPublishBtn.disabled = false;
   generateAndPublishBtn.innerHTML = `

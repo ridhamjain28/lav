@@ -1242,7 +1242,7 @@ const CloudSync = {
     spawnHearts(25);
     setTimeout(() => {
       yayOverlay.classList.remove('show');
-    }, 1800);
+    }, 2800);
   }
 
   // =========================================================================
@@ -1555,7 +1555,7 @@ const CloudSync = {
         renderBoard();
         renderDots();
         renderNote();
-      }, 1400);
+      }, 2800);
     } else {
       setTimeout(() => {
         const mainLayout = document.getElementById('mainLayout');
@@ -1565,7 +1565,7 @@ const CloudSync = {
         const phrasesList = levels.map(l => l.phrase);
         finaleContent.innerHTML = `"${phrasesList.join(' — ')}"<br><br>${escapeHtml(CFG.finaleMessage)}`;
         spawnHearts(30);
-      }, 1200);
+      }, 2400);
     }
   });
 
@@ -1746,28 +1746,25 @@ const CloudSync = {
   // Dynamic async cloud hydration: fetch latest phrases & latest progress
   async function hydrateFromCloud() {
     try {
-      // 1. Fetch any newly added phrases/levels published from hidden.html
+      // 1. Fetch any newly added, edited, or rearranged phrases/levels published from hidden.html
       const cloudLevels = await CloudSync.get('phrases_and_levels');
       if (Array.isArray(cloudLevels) && cloudLevels.length > 0) {
-        // Merge with preset levels
-        const merged = PRESET_LEVELS.map(l => ({ ...l }));
-        for (const cl of cloudLevels) {
-          if (!merged.some(m => m.phrase.trim().toLowerCase() === cl.phrase.trim().toLowerCase())) {
-            merged.push({
-              phrase: cl.phrase,
-              puzzle: cl.puzzle.map(r => r.slice()),
-              solution: cl.solution.map(r => r.slice())
-            });
-          }
-        }
-        levels = merged;
+        levels = cloudLevels.map(cl => ({
+          phrase: cl.phrase,
+          puzzle: cl.puzzle.map(r => r.slice()),
+          solution: cl.solution.map(r => r.slice())
+        }));
         N = levels.length;
         
-        // Expand userGrids and levelCompleted if needed
-        while (userGrids.length < N) {
-          userGrids.push(levels[userGrids.length].puzzle.map(r => r.slice()));
-          levelCompleted.push(false);
+        // Re-align userGrids and levelCompleted
+        const newGrids = [];
+        const newCompleted = [];
+        for (let i = 0; i < N; i++) {
+          newGrids.push(userGrids[i] ? userGrids[i] : levels[i].puzzle.map(r => r.slice()));
+          newCompleted.push(levelCompleted[i] ? Boolean(levelCompleted[i]) : false);
         }
+        userGrids = newGrids;
+        levelCompleted = newCompleted;
       }
 
       // 2. Fetch latest player progress
