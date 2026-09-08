@@ -915,7 +915,7 @@ const CloudSync = {
 };
 
 // =========================================================================
-// STUDIO APPLICATION LOGIC
+// STUDIO APPLICATION LOGIC & STATE
 // =========================================================================
 let allLevels = PRESET_LEVELS.map((l, idx) => ({ id: idx + 1, ...l, isPreset: true }));
 let selectedLevelIdx = 0;
@@ -967,13 +967,20 @@ const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
 const toast = document.getElementById('toast');
 const toastText = document.getElementById('toastText');
 
+/**
+ * Displays a non-intrusive floating toast notification message with auto-dismiss.
+ * @param {string} msg - The notification message text to display.
+ */
 function showToast(msg) {
   toastText.textContent = msg;
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 3500);
 }
 
-// PIN Gate
+/**
+ * Verifies the admin security PIN entered by the user.
+ * If valid, reveals the admin studio dashboard and saves authentication to sessionStorage.
+ */
 function checkPin() {
   const pin = pinInput.value.trim();
   if (pin === CFG.adminPin || sessionStorage.getItem('lav_admin_auth') === 'true') {
@@ -995,6 +1002,10 @@ if (sessionStorage.getItem('lav_admin_auth') === 'true') {
   initStudio();
 }
 
+/**
+ * Initializes the studio dashboard by fetching the latest levels and player progress from cloud storage,
+ * then rendering the level inventory table, inspector board, and checkpoint selector.
+ */
 async function initStudio() {
   await loadLevelsFromCloud();
   await loadProgressFromCloud();
@@ -1003,6 +1014,11 @@ async function initStudio() {
   populateCheckpointOptions();
 }
 
+/**
+ * Serializes and saves all level phrases, puzzles, and solutions to the shared cloud KV bucket.
+ * This triggers live instant updates for the game website.
+ * @returns {Promise<boolean>} True if cloud update succeeded.
+ */
 async function saveAllLevelsToCloud() {
   const payload = allLevels.map(l => ({
     phrase: l.phrase,
@@ -1013,6 +1029,10 @@ async function saveAllLevelsToCloud() {
   return await CloudSync.set('phrases_and_levels', payload);
 }
 
+/**
+ * Fetches the array of published levels from the cloud KV bucket.
+ * Falls back to local PRESET_LEVELS if no cloud data exists yet.
+ */
 async function loadLevelsFromCloud() {
   const cloudLevels = await CloudSync.get('phrases_and_levels');
   if (Array.isArray(cloudLevels) && cloudLevels.length > 0) {
@@ -1026,6 +1046,10 @@ async function loadLevelsFromCloud() {
   }
 }
 
+/**
+ * Fetches the current live player progress (checkpoint & completed levels) from cloud storage,
+ * and updates the live status indicators.
+ */
 async function loadProgressFromCloud() {
   playerProgress = await CloudSync.get('player_progress');
   const lvlNum = (playerProgress && typeof playerProgress.currentLevel === 'number') ? playerProgress.currentLevel + 1 : 5;
@@ -1036,6 +1060,9 @@ async function loadProgressFromCloud() {
   checkpointSelect.value = (lvlNum - 1).toString();
 }
 
+/**
+ * Populates the dropdown menu for manual player checkpoint selection based on all active levels.
+ */
 function populateCheckpointOptions() {
   checkpointSelect.innerHTML = '';
   allLevels.forEach((lvl, idx) => {
@@ -1051,6 +1078,9 @@ function populateCheckpointOptions() {
   }
 }
 
+/**
+ * Renders the full inventory table of all game levels with actions to Inspect, Edit, or Delete.
+ */
 function renderLevelsTable() {
   levelsTableBody.innerHTML = '';
   allLevels.forEach((lvl, idx) => {
@@ -1070,6 +1100,7 @@ function renderLevelsTable() {
     levelsTableBody.appendChild(tr);
   });
 
+  // Attach event listeners for row actions
   document.querySelectorAll('.inspect-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const idx = parseInt(e.currentTarget.getAttribute('data-idx'), 10);
@@ -1093,6 +1124,10 @@ function renderLevelsTable() {
   });
 }
 
+/**
+ * Renders the side-by-side Sudoku inspector (puzzle clues and complete solution) for a selected level.
+ * @param {number} idx - Index of the level to display in the inspector.
+ */
 function renderInspector(idx) {
   const lvl = allLevels[idx] || allLevels[0];
   if (!lvl) return;
@@ -1100,7 +1135,7 @@ function renderInspector(idx) {
   inspectorTitle.textContent = `Level ${idx + 1} Inspector`;
   inspectorPhrase.textContent = `"${lvl.phrase}"`;
 
-  // Render Puzzle Grid
+  // Render Puzzle Grid (starting clues)
   inspectorPuzzleGrid.innerHTML = '';
   for (let r = 0; r < 9; r++) {
     for (let c = 0; c < 9; c++) {
@@ -1117,7 +1152,7 @@ function renderInspector(idx) {
     }
   }
 
-  // Render Solution Grid
+  // Render Solution Grid (complete numbers)
   inspectorSolutionGrid.innerHTML = '';
   for (let r = 0; r < 9; r++) {
     for (let c = 0; c < 9; c++) {
@@ -1135,7 +1170,10 @@ function renderInspector(idx) {
   }
 }
 
-// Edit Modal Handling
+/**
+ * Opens the Edit Modal for a specific level index.
+ * @param {number} idx - Index of the level to edit.
+ */
 function openEditModal(idx) {
   levelToEditIdx = idx;
   const lvl = allLevels[idx];
@@ -1148,6 +1186,9 @@ function openEditModal(idx) {
   editModal.style.display = 'flex';
 }
 
+/**
+ * Closes the Edit Modal and clears active edit state.
+ */
 function closeEditModal() {
   editModal.style.display = 'none';
   levelToEditIdx = null;
@@ -1160,6 +1201,7 @@ editRegenSudokuCheckbox.addEventListener('change', () => {
 closeEditModalBtn.addEventListener('click', closeEditModal);
 cancelEditBtn.addEventListener('click', closeEditModal);
 
+// Save edits button handler
 saveEditBtn.addEventListener('click', async () => {
   if (levelToEditIdx === null || !allLevels[levelToEditIdx]) return;
 
@@ -1195,7 +1237,10 @@ saveEditBtn.addEventListener('click', async () => {
   showToast(`Level ${levelToEditIdx + 1} updated live!`);
 });
 
-// Delete Modal Handling
+/**
+ * Opens the Delete Confirmation Modal for a specific level.
+ * @param {number} idx - Index of the level to delete.
+ */
 function openDeleteModal(idx) {
   levelToDeleteIdx = idx;
   const lvl = allLevels[idx];
@@ -1205,6 +1250,9 @@ function openDeleteModal(idx) {
   deleteModal.style.display = 'flex';
 }
 
+/**
+ * Closes the Delete Confirmation Modal.
+ */
 function closeDeleteModal() {
   deleteModal.style.display = 'none';
   levelToDeleteIdx = null;
@@ -1212,6 +1260,7 @@ function closeDeleteModal() {
 
 cancelDeleteBtn.addEventListener('click', closeDeleteModal);
 
+// Confirm delete button handler
 confirmDeleteBtn.addEventListener('click', async () => {
   if (levelToDeleteIdx === null || !allLevels[levelToDeleteIdx]) return;
 
@@ -1255,7 +1304,7 @@ restorePresetsBtn.addEventListener('click', async () => {
   showToast("Restored original 6 presets to cloud!");
 });
 
-// Add New Phrase & Publish
+// Add New Phrase & Publish handler
 generateAndPublishBtn.addEventListener('click', async () => {
   const phrase = phraseInput.value.trim();
   if (!phrase) {
@@ -1301,7 +1350,7 @@ generateAndPublishBtn.addEventListener('click', async () => {
   }
 });
 
-// Update Checkpoint
+// Update Checkpoint handler
 updateCheckpointBtn.addEventListener('click', async () => {
   const targetIdx = parseInt(checkpointSelect.value, 10);
   const completed = new Array(allLevels.length).fill(false);
@@ -1329,7 +1378,7 @@ updateCheckpointBtn.addEventListener('click', async () => {
   showToast(`Player checkpoint updated to Level ${targetIdx + 1}!`);
 });
 
-// Copy Markdown for solutions.md
+// Copy Markdown for solutions.md handler
 exportMarkdownBtn.addEventListener('click', () => {
   let md = "# Love Note Sudoku — Solutions & Puzzles\n\n";
   allLevels.forEach((lvl, idx) => {

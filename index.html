@@ -781,11 +781,13 @@ window.LOVE_CONFIG = {
   // Grand finale message displayed when all puzzles are solved:
   finaleMessage: "Every moment with you is my favorite puzzle solved. I love you endlessly",
 
-  // Audio playlist files (place in project folder):
+  // Audio playlist files (supports song.mp3, song2.mp3, song3.mp3, song4.mp3, song5.mp3):
   songFiles: [
     "song.mp3",
     "song2.mp3",
-    "song3.mp3"
+    "song3.mp3",
+    "song4.mp3",
+    "song5.mp3"
   ],
 
   // Optional external webhook URL to send HTTP POST notifications when kisses are added:
@@ -961,6 +963,12 @@ const PRESET_LEVELS = [
 // SUDOKU ENGINE & PUZZLE GENERATOR
 // =========================================================================
 class SudokuEngine {
+  /**
+   * Checks if placing digit `num` at row `r`, column `c` is valid under Sudoku rules:
+   * 1. No identical number in the same row
+   * 2. No identical number in the same column
+   * 3. No identical number in the same 3x3 sub-grid
+   */
   static isValid(board, r, c, num) {
     for (let i = 0; i < 9; i++) {
       if (board[r][i] === num && i !== c) return false;
@@ -977,6 +985,9 @@ class SudokuEngine {
     return true;
   }
 
+  /**
+   * Backtracking solver that fills a 9x9 grid with a complete valid Sudoku solution.
+   */
   static solve(board) {
     for (let r = 0; r < 9; r++) {
       for (let c = 0; c < 9; c++) {
@@ -996,6 +1007,10 @@ class SudokuEngine {
     return true;
   }
 
+  /**
+   * Generates a new Sudoku puzzle with the specified number of given starting clues.
+   * Creates a full solution, then removes numbers at randomized coordinates.
+   */
   static generate(cluesCount = 34) {
     const solution = Array.from({length: 9}, () => Array(9).fill(0));
     this.solve(solution);
@@ -1015,6 +1030,13 @@ class SudokuEngine {
     return { puzzle, solution };
   }
 
+  /**
+   * Validates whether the player's completed 9x9 board is 100% correctly solved:
+   * 1. All cells are filled (1-9) and given starting clues were never changed
+   * 2. All 9 rows have unique numbers 1-9
+   * 3. All 9 columns have unique numbers 1-9
+   * 4. All 9 3x3 boxes have unique numbers 1-9
+   */
   static isSudokuSolved(grid, originalPuzzle) {
     for (let r = 0; r < 9; r++) {
       for (let c = 0; c < 9; c++) {
@@ -1059,6 +1081,9 @@ const CloudSync = {
   bucketKey: (window.LOVE_CONFIG && window.LOVE_CONFIG.cloudSyncKey) || 'lav_love_cloud_sync_v2',
   apiBase: 'https://kvdb.io',
 
+  /**
+   * Fetches JSON data for a key from the shared cloud bucket.
+   */
   async get(key) {
     try {
       const res = await fetch(`${this.apiBase}/${this.bucketKey}/${key}`, {
@@ -1071,6 +1096,9 @@ const CloudSync = {
     }
   },
 
+  /**
+   * Stores JSON data for a key into the shared cloud bucket.
+   */
   async set(key, value) {
     try {
       const res = await fetch(`${this.apiBase}/${this.bucketKey}/${key}`, {
@@ -1086,7 +1114,7 @@ const CloudSync = {
 };
 
 // =========================================================================
-// GAME CONTROLLER
+// MAIN GAME CONTROLLER
 // =========================================================================
 (function() {
   const CFG = window.LOVE_CONFIG;
@@ -1130,10 +1158,16 @@ const CloudSync = {
   const finaleScreen = document.getElementById('finaleScreen');
   const finaleContent = document.getElementById('finaleContent');
 
+  /**
+   * Sanitizes string to prevent HTML injection.
+   */
   function escapeHtml(s) {
     return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
+  /**
+   * Saves the current game state to browser localStorage and pushes to cloud storage.
+   */
   function saveGameState() {
     try {
       const data = {
@@ -1151,6 +1185,9 @@ const CloudSync = {
     }
   }
 
+  /**
+   * Restores game state from localStorage or cloud data, respecting checkpoint floors.
+   */
   function loadGameState(cloudData = null) {
     try {
       const raw = localStorage.getItem(GAME_STORAGE_KEY);
@@ -1212,6 +1249,9 @@ const CloudSync = {
     return false;
   }
 
+  /**
+   * Renders the right-hand Diary card with unlocked phrases and dashed placeholders.
+   */
   function renderDiary(latestUnlockedIdx = -1) {
     if (!diaryContentEl) return;
     diaryContentEl.innerHTML = '';
@@ -1236,6 +1276,9 @@ const CloudSync = {
     }
   }
 
+  /**
+   * Triggers the celebration popup overlay and floating particles when a level is cleared.
+   */
   function showYayAnimation() {
     if (!yayOverlay) return;
     yayOverlay.classList.add('show');
@@ -1246,7 +1289,7 @@ const CloudSync = {
   }
 
   // =========================================================================
-  // MUSIC PLAYER
+  // MUSIC PLAYER SYSTEM
   // =========================================================================
   const bgAudio = document.getElementById('bgAudio');
   const playPauseBtn = document.getElementById('playPauseBtn');
@@ -1258,8 +1301,11 @@ const CloudSync = {
   const currentTimeEl = document.getElementById('currentTime');
   const durationTimeEl = document.getElementById('durationTime');
 
-  const songPlaylist = (CFG.songFiles && CFG.songFiles.length) ? CFG.songFiles : ['song.mp3', 'song2.mp3', 'song3.mp3'];
+  const songPlaylist = (CFG.songFiles && CFG.songFiles.length) ? CFG.songFiles : ['song.mp3', 'song2.mp3', 'song3.mp3', 'song4.mp3', 'song5.mp3'];
 
+  /**
+   * Formats seconds into a human-readable mm:ss format.
+   */
   function formatTime(seconds) {
     if (isNaN(seconds) || !isFinite(seconds) || seconds < 0) return '0:00';
     const m = Math.floor(seconds / 60);
@@ -1267,6 +1313,9 @@ const CloudSync = {
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   }
 
+  /**
+   * Loads a song by index from the playlist and handles autoplay.
+   */
   function loadSong(index, autoPlay = true) {
     currentSongIndex = (index + songPlaylist.length) % songPlaylist.length;
     bgAudio.src = songPlaylist[currentSongIndex];
@@ -1277,6 +1326,9 @@ const CloudSync = {
     }
   }
 
+  /**
+   * Toggles audio playback between play and pause.
+   */
   function togglePlayPause() {
     if (bgAudio.paused) {
       if (!bgAudio.src || bgAudio.src === '' || bgAudio.src.endsWith('/')) {
@@ -1289,6 +1341,9 @@ const CloudSync = {
     }
   }
 
+  /**
+   * Updates play/pause button icon depending on audio state.
+   */
   function updatePlayPauseUI() {
     if (!playIcon || !pauseIcon || !playPauseBtn) return;
     if (bgAudio.paused) {
@@ -1350,6 +1405,9 @@ const CloudSync = {
     document.removeEventListener('click', onFirstClick);
   }, { once: true });
 
+  /**
+   * Summons the mobile keyboard smoothly by focusing a hidden numeric input.
+   */
   function triggerNativeInput() {
     nativeInput.value = '';
     nativeInput.focus();
@@ -1366,6 +1424,7 @@ const CloudSync = {
     if (e.key === 'Backspace' || e.key === 'Delete') setCellVal(0);
   });
 
+  // Physical PC keyboard listener
   document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowUp') { e.preventDefault(); moveSel(-1, 0); }
     else if (e.key === 'ArrowDown') { e.preventDefault(); moveSel(1, 0); }
@@ -1375,12 +1434,18 @@ const CloudSync = {
     else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') { setCellVal(0); }
   });
 
+  /**
+   * Moves the currently selected cell cursor in the Sudoku grid.
+   */
   function moveSel(dr, dc) {
     selected.r = (selected.r + dr + 9) % 9;
     selected.c = (selected.c + dc + 9) % 9;
     renderBoard();
   }
 
+  /**
+   * Enters a number into the currently selected cell (if not an immutable starting clue).
+   */
   function setCellVal(val) {
     const lvl = levels[currentLevel];
     if (lvl.puzzle[selected.r][selected.c] !== 0) return;
@@ -1391,10 +1456,16 @@ const CloudSync = {
     renderBoard();
   }
 
+  /**
+   * Returns the 3x3 box index (0-8) for a given (row, col) coordinate.
+   */
   function boxIndex(r, c) {
     return Math.floor(r / 3) * 3 + Math.floor(c / 3);
   }
 
+  /**
+   * Detects conflicting/duplicate numbers across rows, cols, and 3x3 boxes.
+   */
   function findConflicts(grid) {
     const bad = new Set();
     for (let r = 0; r < 9; r++) {
@@ -1431,6 +1502,9 @@ const CloudSync = {
     return bad;
   }
 
+  /**
+   * Renders the top-bar level progression dots.
+   */
   function renderDots() {
     dotsEl.innerHTML = '';
     for (let i = 0; i < N; i++) {
@@ -1440,6 +1514,9 @@ const CloudSync = {
     }
   }
 
+  /**
+   * Renders the top note phrase preview.
+   */
   function renderNote() {
     const parts = [];
     for (let i = 0; i < N; i++) {
@@ -1452,6 +1529,9 @@ const CloudSync = {
     noteTextEl.innerHTML = parts.join(' &nbsp;—&nbsp; ');
   }
 
+  /**
+   * Renders the 9x9 Sudoku board with active highlighting and conflict states.
+   */
   function renderBoard() {
     boardEl.innerHTML = '';
     const lvl = levels[currentLevel];
@@ -1494,12 +1574,14 @@ const CloudSync = {
     }
   }
 
+  // Clear button: resets current puzzle inputs to initial clues
   clearBtn.addEventListener('click', () => {
     userGrids[currentLevel] = levels[currentLevel].puzzle.map(row => row.slice());
     statusText.textContent = '';
     renderBoard();
   });
 
+  // Save button: saves locally and to cloud
   saveBtn.addEventListener('click', () => {
     saveGameState();
     spawnHearts(12);
@@ -1510,6 +1592,7 @@ const CloudSync = {
     }, 3000);
   });
 
+  // Check button: checks puzzle solution and unlocks line
   checkBtn.addEventListener('click', () => {
     const lvl = levels[currentLevel];
     const grid = userGrids[currentLevel];
@@ -1569,6 +1652,9 @@ const CloudSync = {
     }
   });
 
+  /**
+   * Spawns animated floating vector SVG hearts and stars.
+   */
   function spawnHearts(count = 10) {
     for (let i = 0; i < count; i++) {
       setTimeout(() => {
@@ -1588,6 +1674,9 @@ const CloudSync = {
     }
   }
 
+  /**
+   * Initializes background ambient floating SVG heart vectors.
+   */
   function initHeartsBg() {
     const container = document.getElementById('heartsBg');
     if (!container) return;
@@ -1619,6 +1708,9 @@ const CloudSync = {
   if (isNaN(kissCount)) kissCount = 0;
   if (kissCountEl) kissCountEl.textContent = kissCount;
 
+  /**
+   * Updates kiss counter UI and optionally persists locally.
+   */
   function updateKissUI(val, persistLocal = true) {
     if (typeof val !== 'number' || isNaN(val)) return;
     kissCount = val;
@@ -1628,6 +1720,9 @@ const CloudSync = {
     }
   }
 
+  /**
+   * Fetches latest kiss count from cloud counter.
+   */
   function fetchLiveCount() {
     fetch(`${apiBase}/get/${cloudCounterKey}`)
       .then(r => r.json())
@@ -1650,6 +1745,9 @@ const CloudSync = {
     }
   });
 
+  /**
+   * Spawns a floating kiss SVG heart particle when the kiss counter is tapped.
+   */
   function spawnKissParticle() {
     if (!kissBtn) return;
     const rect = kissBtn.getBoundingClientRect();
@@ -1664,6 +1762,9 @@ const CloudSync = {
     setTimeout(() => particle.remove(), 1800);
   }
 
+  /**
+   * Adds kisses to the counter and syncs to cloud + webhooks.
+   */
   function addKiss(amount = 1, silent = false) {
     const newCount = kissCount + amount;
     updateKissUI(newCount);
@@ -1690,6 +1791,9 @@ const CloudSync = {
     window.dispatchEvent(new CustomEvent('kissAdded', { detail: { count: newCount, amount } }));
   }
 
+  /**
+   * Resets kisses count back to 0.
+   */
   function resetKisses() {
     updateKissUI(0);
     fetch(`${apiBase}/set/${cloudCounterKey}?value=0`).catch(() => {});
@@ -1743,7 +1847,9 @@ const CloudSync = {
   renderDiary();
   renderBoard();
 
-  // Dynamic async cloud hydration: fetch latest phrases & latest progress
+  /**
+   * Pulls latest level phrases, edits, deletions, and checkpoints from cloud store.
+   */
   async function hydrateFromCloud() {
     try {
       // 1. Fetch any newly added, edited, or rearranged phrases/levels published from hidden.html
